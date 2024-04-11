@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Increasing the back propagation steps can be seen as a regularization step
 
     # With SGD try with an higher learning rate (> 1 for instance)
-    lr = 0.0015 # This is definitely not good for SGD
+    lr = 1.5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
 
     vocab_len = len(lang.word2id)
@@ -54,7 +54,7 @@ if __name__ == "__main__":
     model = LM_LSTM_DROP(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
     model.apply(init_weights)
 
-    optimizer = optim.AdamW(model.parameters(), lr=lr)
+    optimizer = optim.SGD(model.parameters(), lr=lr)
     criterion_train = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"])
     criterion_eval = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"], reduction='sum')
 
