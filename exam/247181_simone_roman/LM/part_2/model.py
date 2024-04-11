@@ -7,7 +7,7 @@ import numpy as np
 
 # RNN Elman version
 # We are not going to use this since for efficiently purposes it's better to use the RNN layer provided by pytorch
-
+DEVICE = 'cuda:0'
 class RNN_cell(nn.Module):
     def __init__(self,  hidden_size, input_size, output_size, vocab_size, dropout=0.1):
         super(RNN_cell, self).__init__()
@@ -95,12 +95,14 @@ class VariationalDropout(nn.Module):
 
         batch_size = input.shape[0]    #1=batch_size 2= lunghezza max sentence 3=embedding
         emb_size = input.shape[2]
-
-
-        dropout_mask = torch.bernoulli(torch.full(batch_size, emb_size), self.prob)
-        
+        # dropout_mask = torch.bernoulli(torch.full((batch_size, emb_size)), 1 - self.prob)
+        # dropout_mask = dropout_mask.unsqueeze(0).unsqueeze(2)
+        benoulli = torch.distributions.bernoulli.Bernoulli(probs= 1 - self.prob)
+        mask = benoulli.sample((batch_size,1,emb_size)).to(DEVICE)
+        mask_expanded = mask.expand_as(input)
         #output
-        output = input / (1 - dropout_mask)  
+        output = input * mask_expanded / (1 - self.prob)
+        output.to(DEVICE)
         
         return output
 
@@ -118,6 +120,7 @@ class LM_LSTM_DROP(nn.Module):
         self.pad_token = pad_index
         # Linear layer to project the hidden layer to our output space
         self.output = nn.Linear(hidden_size, output_size)
+
         self.out_dropout = VariationalDropout(0.5)
         # Weight tying
         self.output.weight = self.embedding.weight
@@ -125,8 +128,10 @@ class LM_LSTM_DROP(nn.Module):
     def forward(self, input_sequence):
         emb = self.embedding(input_sequence)
         drop_emb = self.emb_dropout(emb)
+    
         lstm_out, _ = self.lstm(drop_emb)
         drop_lstm = self.out_dropout(lstm_out)
+
         output = self.output(drop_lstm).permute(0,2,1)
         return output
     
