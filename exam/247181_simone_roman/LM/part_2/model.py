@@ -67,22 +67,42 @@ class LM_LSTM(nn.Module):
         return output
 
 
+
+# class LockedDropout(nn.Module):
+#     def __init__(self):
+#         super().__init__()
+
+#     def forward(self, x, dropout=0.5):
+#         if not self.training or not dropout:
+#             return x
+#         m = x.data.new(1, x.size(1), x.size(2)).bernoulli_(1 - dropout)
+#         mask = Variable(m, requires_grad=False) / (1 - dropout)
+#         mask = mask.expand_as(x)
+#         return mask * x
+
+
+
 class VariationalDropout(nn.Module):
-    def __init__(self, p=0.5, inplace=False):
+    def __init__(self, prob=0.5):
         super(VariationalDropout, self).__init__()
-        self.p = p
-        self.inplace = inplace
+        self.prob = prob
+        
 
     def forward(self, input):
-        if not self.training or self.p == 0:
+        if not self.training:
             return input
+        
 
-        # Calcola la maschera di dropout
-        mask = torch.ones_like(input)
-        mask = nn.functional.dropout(mask, p=self.p, training=True, inplace=self.inplace)
+        batch_size = input.shape[0]    #1=batch_size 2= lunghezza max sentence 3=embedding
+        emb_size = input.shape[2]
 
-        # Applica la maschera di dropout all'input
-        return input * mask
+
+        dropout_mask = torch.bernoulli(torch.full(batch_size, emb_size), self.prob)
+        
+        #output
+        output = input / (1 - dropout_mask)  
+        
+        return output
 
 #PART 1.2
 class LM_LSTM_DROP(nn.Module):
@@ -91,25 +111,23 @@ class LM_LSTM_DROP(nn.Module):
         super(LM_LSTM_DROP, self).__init__()
         # Token ids to vectors
         self.embedding = nn.Embedding(output_size, emb_size, padding_idx=pad_index)
-        # Dropout layer after embedding
-        self.emb_dropout = VariationalDropout(p=0.5)
+
+        self.emb_dropout = VariationalDropout(0.8)
         # Pytorch's LSTM layer
         self.lstm = nn.LSTM(emb_size, hidden_size, n_layers, bidirectional=False, batch_first=True)
         self.pad_token = pad_index
-        # Dropout layer before the last linear layer
-        self.dropout = VariationalDropout(p=0.5)
         # Linear layer to project the hidden layer to our output space
         self.output = nn.Linear(hidden_size, output_size)
-
+        self.out_dropout = VariationalDropout(0.5)
         # Weight tying
         self.output.weight = self.embedding.weight
 
     def forward(self, input_sequence):
         emb = self.embedding(input_sequence)
-        drop1 = self.emb_dropout(emb)
-        lstm_out, _ = self.lstm(drop1)
-        drop2 = self.dropout(lstm_out)
-        output = self.output(drop2).permute(0,2,1)
+        drop_emb = self.emb_dropout(emb)
+        lstm_out, _ = self.lstm(drop_emb)
+        drop_lstm = self.out_dropout(lstm_out)
+        output = self.output(drop_lstm).permute(0,2,1)
         return output
     
     
