@@ -74,7 +74,7 @@ class LM_LSTM_DROP(nn.Module):
         # Token ids to vectors
         self.embedding = nn.Embedding(output_size, emb_size, padding_idx=pad_index)
         # Dropout layer after embedding
-        self.s = nn.Dropout(emb_dropout)
+        self.emb_dropout = nn.Dropout(emb_dropout)
         # Pytorch's LSTM layer
         self.lstm = nn.LSTM(emb_size, hidden_size, n_layers, bidirectional=False, batch_first=True)
         self.pad_token = pad_index

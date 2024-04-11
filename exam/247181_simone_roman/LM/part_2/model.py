@@ -106,9 +106,9 @@ class LM_LSTM_DROP(nn.Module):
 
     def forward(self, input_sequence):
         emb = self.embedding(input_sequence)
-        drop1 = VariationalDropout(p=0.5)
+        drop1 = self.emb_dropout(emb)
         lstm_out, _ = self.lstm(drop1)
-        drop2 = VariationalDropout(p=0.5)
+        drop2 = self.dropout(lstm_out)
         output = self.output(drop2).permute(0,2,1)
         return output
     
