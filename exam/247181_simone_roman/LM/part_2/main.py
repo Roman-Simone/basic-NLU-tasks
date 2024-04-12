@@ -27,9 +27,9 @@ if __name__ == "__main__":
 
     # Dataloader instantiation
     # You can reduce the batch_size if the GPU memory is not enough
-    batch_size_train = 64
-    batch_size_dev = 128
-    batch_size_test = 128
+    batch_size_train = 32
+    batch_size_dev = 64
+    batch_size_test = 64
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size_train, collate_fn=partial(collate_fn, pad_token=lang.word2id["<pad>"]),  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=batch_size_dev, collate_fn=partial(collate_fn, pad_token=lang.word2id["<pad>"]))
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # Increasing the back propagation steps can be seen as a regularization step
 
     # With SGD try with an higher learning rate (> 1 for instance)
-    lr = 1.5 # This is definitely not good for SGD
+    lr = 5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
 
     vocab_len = len(lang.word2id)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     
 
-    n_epochs = 3
+    n_epochs = 100
     patience = 3
     losses_train = []
     losses_dev = []
@@ -96,11 +96,11 @@ if __name__ == "__main__":
         losses_dev.append(np.asarray(loss_dev).mean())
         pbar.set_description("PPL: %f" % ppl_dev)
 
-        if  ppl_dev < best_ppl: # the lower, the better
+        if  ppl_dev < best_ppl and switch_ASGD: # the lower, the better
             best_ppl = ppl_dev
             best_model = copy.deepcopy(model).to('cpu')
             patience = 3
-        else:
+        elif ppl_dev > best_ppl and switch_ASGD:
             patience -= 1
             lr=lr/2
 
@@ -109,8 +109,10 @@ if __name__ == "__main__":
                 prm.data = tmp[prm].clone()
 
         
-        if patience <= 0: # Early stopping with patience
+        if patience <= 0 and switch_ASGD: # Early stopping with patience
             break # Not nice but it keeps the code clean
+
+        print(loss_dev, min(losses_dev[:-window]))
 
         if switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window])):
             print('Switching to ASGD')
