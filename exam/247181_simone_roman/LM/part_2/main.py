@@ -125,9 +125,9 @@ if __name__ == "__main__":
     print('Test ppl: ', final_ppl)
 
     name_exercise = "PART_22"
-    save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, final_epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model)
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, final_epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model)
 
-    
+
 
 
 
