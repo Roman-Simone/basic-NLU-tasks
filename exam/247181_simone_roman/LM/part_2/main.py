@@ -71,28 +71,52 @@ if __name__ == "__main__":
     best_model = None
     pbar = tqdm(range(1,n_epochs))
     final_epoch = 0
+    switch_ASGD = False
+    window = 5
+  
 
     #If the PPL is too high try to change the learning rate
     for epoch in pbar:
         final_epoch = epoch
         ppl_train, loss_train = train_loop(train_loader, optimizer, criterion_train, model, clip)
         ppl_train_list.append(ppl_train)
-        if epoch % 1 == 0:
-            sampled_epochs.append(epoch)
-            losses_train.append(np.asarray(loss_train).mean())
-            ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
-            ppl_dev_list.append(ppl_dev)
-            losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description("PPL: %f" % ppl_dev)
-            if  ppl_dev < best_ppl: # the lower, the better
-                best_ppl = ppl_dev
-                best_model = copy.deepcopy(model).to('cpu')
-                patience = 3
-            else:
-                patience -= 1
 
-            if patience <= 0: # Early stopping with patience
-                break # Not nice but it keeps the code clean
+        # if epoch % 1 == 0:
+        sampled_epochs.append(epoch)
+        losses_train.append(np.asarray(loss_train).mean())
+
+        if switch_ASGD:
+            tmp = {}
+            for prm in model.parameters():
+                tmp[prm] = prm.data.clone()
+                prm.data = optimizer.state[prm]['ax'].clone()
+
+        ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
+        ppl_dev_list.append(ppl_dev)
+        losses_dev.append(np.asarray(loss_dev).mean())
+        pbar.set_description("PPL: %f" % ppl_dev)
+
+        if  ppl_dev < best_ppl: # the lower, the better
+            best_ppl = ppl_dev
+            best_model = copy.deepcopy(model).to('cpu')
+            patience = 3
+        else:
+            patience -= 1
+            lr=lr/2
+
+        if switch_ASGD:
+            for prm in model.parameters():
+                prm.data = tmp[prm].clone()
+
+        
+        if patience <= 0: # Early stopping with patience
+            break # Not nice but it keeps the code clean
+
+        if switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window])):
+            print('Switching to ASGD')
+            switch_ASGD = True
+            optimizer = optim.ASGD(model.parameters(), lr=lr)
+
 
     best_model.to(DEVICE)
     final_ppl,  _ = eval_loop(test_loader, criterion_eval, best_model)
