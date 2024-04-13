@@ -11,6 +11,7 @@ if __name__ == "__main__":
     # If you are using Colab, run these lines
     #Wrtite the code to load the datasets and to run your functions
     # Print the results
+    
     train_raw = read_file("dataset/PennTreeBank/ptb.train.txt")
     dev_raw = read_file("dataset/PennTreeBank/ptb.valid.txt")
     test_raw = read_file("dataset/PennTreeBank/ptb.test.txt")
