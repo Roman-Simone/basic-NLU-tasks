@@ -11,9 +11,10 @@ if __name__ == "__main__":
     # If you are using Colab, run these lines
     #Wrtite the code to load the datasets and to run your functions
     # Print the results
-    train_raw = read_file("dataset/PennTreeBank/ptb.train.txt")
-    dev_raw = read_file("dataset/PennTreeBank/ptb.valid.txt")
-    test_raw = read_file("dataset/PennTreeBank/ptb.test.txt")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    train_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.train.txt"))
+    dev_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.valid.txt"))
+    test_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.test.txt"))
 
     # Vocab is computed only on training set
     # We add two special tokens end of sentence and padding
@@ -100,7 +101,8 @@ if __name__ == "__main__":
     print('Test ppl: ', final_ppl)
 
     name_exercise = "PART_13"
-    save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, final_epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model)
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, 
+                emb_size, lr, clip, vocab_len, final_epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model)
 
     
 

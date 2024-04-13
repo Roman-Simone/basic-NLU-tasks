@@ -146,7 +146,7 @@ def init_weights(mat):
 
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model):
     # Create a folder
     folder_path = "results"
     if not os.path.exists(folder_path):
@@ -189,12 +189,6 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_trai
         file.write(f"Optimizer: {optimizer}\n")
         file.write(f"Model: {model}\n")
 
-
-    # # To save the model
-    # #path = 'model_bin/model_name.pt'
-    # torch.save(model.state_dict(), folder_path)
-    # #To load the model you need to initialize it
-    # model = (emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(device)
-    # #Then you load it
-    # model.load_state_dict(torch.load(path))
+    # To save the model
+    torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
 
