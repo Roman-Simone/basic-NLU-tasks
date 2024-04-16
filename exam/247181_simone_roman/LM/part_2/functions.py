@@ -148,7 +148,8 @@ def init_weights(mat):
 
 def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model):
     # Create a folder
-    folder_path = "results"
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])

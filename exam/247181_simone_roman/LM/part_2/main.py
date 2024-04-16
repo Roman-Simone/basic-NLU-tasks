@@ -8,51 +8,44 @@ from model import *
 import os
 
 if __name__ == "__main__":
-    # If you are using Colab, run these lines
-    #Wrtite the code to load the datasets and to run your functions
-    # Print the results
+    
+    #!PARAMETERS
+
+    batch_size_train = 32
+    batch_size_dev = 64
+    batch_size_test = 64
+    
+    hid_size = 300
+    emb_size = 300
+
+    lr = 5 # This is definitely not good for SGD
+    clip = 5 # Clip the gradient
+    
+    #*###############################################################################################
+
+    #!LOADING DATA
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
     train_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.train.txt"))
     dev_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.valid.txt"))
     test_raw = read_file(os.path.join(current_dir, "dataset/PennTreeBank/ptb.test.txt"))
 
-    # Vocab is computed only on training set
-    # We add two special tokens end of sentence and padding
     vocab = get_vocab(train_raw, ["<pad>", "<eos>"])
-
     lang = Lang(train_raw, ["<pad>", "<eos>"])
 
     train_dataset = PennTreeBank(train_raw, lang)
     dev_dataset = PennTreeBank(dev_raw, lang)
     test_dataset = PennTreeBank(test_raw, lang)
 
-    # Dataloader instantiation
-    # You can reduce the batch_size if the GPU memory is not enough
-    batch_size_train = 32
-    batch_size_dev = 64
-    batch_size_test = 64
-
     train_loader = DataLoader(train_dataset, batch_size=batch_size_train, collate_fn=partial(collate_fn, pad_token=lang.word2id["<pad>"]),  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=batch_size_dev, collate_fn=partial(collate_fn, pad_token=lang.word2id["<pad>"]))
     test_loader = DataLoader(test_dataset, batch_size=batch_size_test, collate_fn=partial(collate_fn, pad_token=lang.word2id["<pad>"]))
 
-
-    
-    # Experiment also with a smaller or bigger model by changing hid and emb sizes
-    # A large model tends to overfit
-    hid_size = 300
-    emb_size = 300
-
-    # Don't forget to experiment with a lower training batch size
-    # Increasing the back propagation steps can be seen as a regularization step
-
-    # With SGD try with an higher learning rate (> 1 for instance)
-    lr = 5 # This is definitely not good for SGD
-    clip = 5 # Clip the gradient
-
     vocab_len = len(lang.word2id)
 
+    #*###############################################################################################
+
+    #!TRAINING
     model = LM_LSTM_DROP(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
     model.apply(init_weights)
 
@@ -61,7 +54,6 @@ if __name__ == "__main__":
     criterion_eval = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"], reduction='sum')
 
     
-
     n_epochs = 100
     patience = 3
     losses_train = []

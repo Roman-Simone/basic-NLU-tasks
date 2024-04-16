@@ -1,0 +1,31 @@
+PART_12
+
+Hidden Size: 300
+Embedding Size: 300
+Learning Rate: 5
+Clip: 5
+Vocabulary Length: 10001
+Number of Epochs: 10
+Best Dev PPL: 134.93080171236375
+Best Test PPL: 129.20993740484704
+Batch Size Train: 32
+Batch Size Dev: 64
+Batch Size Test: 64
+Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    differentiable: False
+    foreach: None
+    lr: 5
+    maximize: False
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+)
+Model: LM_LSTM_DROP(
+  (embedding): Embedding(10001, 300, padding_idx=0)
+  (emb_dropout): Dropout(p=0.1, inplace=False)
+  (lstm): LSTM(300, 300, batch_first=True)
+  (dropout): Dropout(p=0.1, inplace=False)
+  (output): Linear(in_features=300, out_features=10001, bias=True)
+)
