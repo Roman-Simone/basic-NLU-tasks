@@ -11,14 +11,14 @@ if __name__ == "__main__":
 
     #!PARAMETERS
 
-    batch_size_train = 32
-    batch_size_dev = 64
-    batch_size_test = 64
+    batch_size_train = 64
+    batch_size_dev = 128
+    batch_size_test = 128
     
     hid_size = 300
     emb_size = 300
 
-    lr = 2 # This is definitely not good for SGD
+    lr = 5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
     
     #*###############################################################################################
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     #*###############################################################################################
 
     #!TRAINING
-    model = LM_LSTM_DROP(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
+    model = LM_LSTM(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
     model.apply(init_weights)
 
     optimizer = optim.SGD(model.parameters(), lr=lr)
@@ -84,7 +84,8 @@ if __name__ == "__main__":
                 patience = 3
             else:
                 patience -= 1
-                # lr /= 2
+                lr /= 2
+                optimizer = optim.SGD(model.parameters(), lr=lr)
 
             if patience <= 0: # Early stopping with patience
                 break # Not nice but it keeps the code clean
@@ -93,7 +94,7 @@ if __name__ == "__main__":
     final_ppl,  _ = eval_loop(test_loader, criterion_eval, best_model)
     print('Test ppl: ', final_ppl)
 
-    name_exercise = "PART_12"
+    name_exercise = "PART_11"
     save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, 
                 emb_size, lr, clip, vocab_len, final_epoch,best_ppl, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model)
 

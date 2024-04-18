@@ -146,14 +146,16 @@ def init_weights(mat):
 
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, 
+                ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch,best_ppl, final_ppl, 
+                batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
-    title = f"{name_exercise}_test_{num_folders + 1}"
+    title = f"{name_exercise}_test_{num_folders + 1}_PPL_{int(final_ppl)}"
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -183,6 +185,7 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_trai
         file.write(f"Clip: {clip}\n")
         file.write(f"Vocabulary Length: {vocab_len}\n")
         file.write(f"Number of Epochs: {epoch}\n")
+        file.write(f"Best Dev PPL: {best_ppl}\n")
         file.write(f"Best Test PPL: {final_ppl}\n")
         file.write(f"Batch Size Train: {batch_size_train}\n")
         file.write(f"Batch Size Dev: {batch_size_dev}\n")
@@ -193,3 +196,32 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_trai
     # To save the model
     torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
 
+
+class MovingAverageWeights:
+    def __init__(self, window_size):
+        self.window_size = window_size
+        self.sum_weights = {}
+        self.iteration_weight = 0
+
+    def set_sum_weights(self, sum_weights):
+        self.sum_weights = sum_weights
+
+    def add_weights(self, model):
+        if self.iteration_weight == 0:
+            for name, prm in model.named_parameters():
+                self.sum_weights[name] = prm.data.clone()
+        else:
+            for name, prm in model.named_parameters():
+                self.sum_weights[name] += prm.data
+
+        self.iteration_weight += 1
+
+        if self.iteration_weight > self.window_size:
+            for name, prm in model.named_parameters():
+                self.sum_weights[name] -= prm.data.clone()
+
+    def get_average_weights(self, model):
+        avg_weights = {}
+        for name, prm in model.named_parameters():
+            avg_weights[name] = self.sum_weights[name] / min(self.window_size, self.iteration_weight)
+        return avg_weights

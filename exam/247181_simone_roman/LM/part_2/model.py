@@ -86,7 +86,8 @@ class VariationalDropout(nn.Module):
     def __init__(self, prob=0.5):
         super(VariationalDropout, self).__init__()
         self.prob = prob
-        
+
+
 
     def forward(self, input):
         if not self.training:
@@ -95,11 +96,12 @@ class VariationalDropout(nn.Module):
 
         batch_size = input.shape[0]    #1=batch_size 2= lunghezza max sentence 3=embedding
         emb_size = input.shape[2]
+
         # dropout_mask = torch.bernoulli(torch.full((batch_size, emb_size)), 1 - self.prob)
         # dropout_mask = dropout_mask.unsqueeze(0).unsqueeze(2)
         benoulli = torch.distributions.bernoulli.Bernoulli(probs= 1 - self.prob)
-        mask = benoulli.sample((batch_size,1,emb_size)).to(DEVICE)
-        mask_expanded = mask.expand_as(input)
+        maskk = benoulli.sample((1,1,emb_size)).to(DEVICE)
+        mask_expanded = maskk.expand_as(input)
         #output
         output = input * mask_expanded / (1 - self.prob)
         output.to(DEVICE)
@@ -114,19 +116,23 @@ class LM_LSTM_DROP(nn.Module):
         # Token ids to vectors
         self.embedding = nn.Embedding(output_size, emb_size, padding_idx=pad_index)
 
-        self.emb_dropout = VariationalDropout(0.8)
+        self.emb_dropout = VariationalDropout(0.2)
         # Pytorch's LSTM layer
         self.lstm = nn.LSTM(emb_size, hidden_size, n_layers, bidirectional=False, batch_first=True)
+        self.lstm.flatten_parameters()
         self.pad_token = pad_index
         # Linear layer to project the hidden layer to our output space
         self.output = nn.Linear(hidden_size, output_size)
 
-        self.out_dropout = VariationalDropout(0.5)
+        self.out_dropout = VariationalDropout(0.2)
         # Weight tying
         self.output.weight = self.embedding.weight
 
     def forward(self, input_sequence):
+        self.lstm.flatten_parameters()
         emb = self.embedding(input_sequence)
+      
+        
         drop_emb = self.emb_dropout(emb)
     
         lstm_out, _ = self.lstm(drop_emb)
