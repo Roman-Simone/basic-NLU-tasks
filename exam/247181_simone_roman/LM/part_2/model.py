@@ -130,6 +130,7 @@ class LM_LSTM_DROP(nn.Module):
 
     def forward(self, input_sequence):
         self.lstm.flatten_parameters()
+        
         emb = self.embedding(input_sequence)
       
         

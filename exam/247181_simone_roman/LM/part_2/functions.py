@@ -217,11 +217,11 @@ class MovingAverageWeights:
         self.iteration_weight += 1
 
         if self.iteration_weight > self.window_size:
-            for name, prm in model.named_parameters():
-                self.sum_weights[name] -= prm.data.clone()
+            for prm in model.named_parameters():
+                self.sum_weights[prm] -= prm.data.clone()
 
     def get_average_weights(self, model):
         avg_weights = {}
-        for name, prm in model.named_parameters():
-            avg_weights[name] = self.sum_weights[name] / min(self.window_size, self.iteration_weight)
+        for prm in model.named_parameters():
+            avg_weights[prm] = self.sum_weights[prm] / min(self.window_size, self.iteration_weight)
         return avg_weights
