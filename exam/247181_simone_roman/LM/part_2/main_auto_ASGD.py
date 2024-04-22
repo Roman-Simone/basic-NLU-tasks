@@ -7,6 +7,7 @@ from utils import *
 from model import *
 import os
 import copy
+from collections import deque
 
 def copy_model(model):
     copied_model = type(model)(*model.init_parameters())
@@ -53,10 +54,9 @@ if __name__ == "__main__":
 
     #!TRAINING
     model = LM_LSTM_DROP(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
-     # model = LM_LSTM_DROP(emb_size, hid_size, vocab_len, pad_index=lang.word2id["<pad>"]).to(device)
     model.apply(init_weights)
 
-    optimizer = optim.SGD(model.parameters(), lr=lr, )
+    optimizer = optim.SGD(model.parameters(), lr=lr)
     criterion_train = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"])
     criterion_eval = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"], reduction='sum')
 
@@ -74,16 +74,7 @@ if __name__ == "__main__":
     final_epoch = 0
     switch_ASGD = False
     window = 3
-    # Esempio di utilizzo:
-    #window_size = 10
-    moving_avg_weights = MovingAverageWeights(window)
-
-
-    sum_weights = {}
-    best_weights = {}
-    iteration_weight = 1
-    
-
+   
 
     #If the PPL is too high try to change the learning rate
     for epoch in pbar:
@@ -93,34 +84,12 @@ if __name__ == "__main__":
         sampled_epochs.append(epoch)
         losses_train.append(np.asarray(loss_train).mean())
 
-        if switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window])):
-            switch_ASGD = True
-            lr = 0.1
-            optimizer.param_groups[0]['lr'] = lr
-            print('Learning rate changed to: ', lr)
-
-        if switch_ASGD == False:
-            ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
-            ppl_dev_list.append(ppl_dev)
-            losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description("PPL: %f" % ppl_dev)
-        else:
-            # iteration_weight += 1
-            # print("ASGD iteration: ", iteration_weight)
-            # tmp = {}
-            # for prm in model.parameters():
-            #     tmp[prm] = prm.data.clone()
-            #     # prm.data = optimizer.state[prm]['ax'].clone()
-            #     sum_weights[prm] += tmp[prm]
-
-            #     avg_weights = sum_weights[prm]/iteration_weight
-            #     prm.data = avg_weights.data.clone()
+        if 't0' in optimizer.param_groups[0]:
             tmp = {}
             for prm in model.parameters():
-                prm.data = tmp[prm].clone()
-            moving_avg_weights.add_weights(model)
-            avg_weights = moving_avg_weights.get_average_weights(model)
-            
+                tmp[prm] = prm.data.clone()
+                prm.data = optimizer.state[prm]['ax'].clone()
+                
 
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
@@ -129,46 +98,39 @@ if __name__ == "__main__":
 
             for prm in model.parameters():
                 prm.data = tmp[prm].clone()
+
+        else:
+
+
+            ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
+            ppl_dev_list.append(ppl_dev)
+            losses_dev.append(np.asarray(loss_dev).mean())
+            pbar.set_description("PPL: %f" % ppl_dev)
+
+            if len(losses_dev)>window and loss_dev > min(losses_dev[:-window]):
+                print('Switching to ASGD')
+                optimizer = torch.optim.ASGD(best_weights, lr=2, t0=0, lambd=0., weight_decay=1.2e-06)
+            
+
 
 
         if  ppl_dev < best_ppl: # the lower, the better
             best_ppl = ppl_dev
             best_model = copy.deepcopy(model).to('cpu')
-            # for prm in model.parameters():
-            #     best_weights[prm] = prm.data.clone()
-            moving_avg_weights.add_weights(model)
-            patience = 5
-        elif ppl_dev > best_ppl and switch_ASGD:
+            best_weights = model.parameters()
+            patience = 3
+        elif ppl_dev > best_ppl and 't0' in optimizer.param_groups[0]:
             patience -= 1
+            lr=lr/2
+
+        if epoch % 5 == 0:
+            lr = lr - 0.75
+            print('Learning rate changed to: ', lr)
+            optimizer.param_groups[0]['lr'] = lr
 
         if patience <= 0 and switch_ASGD: # Early stopping with patience
             break # Not nice but it keeps the code clean
 
-        if epoch %4 == 0:
-            lr = lr/2
-            optimizer.param_groups[0]['lr'] = lr
-            print('Learning rate changed to: ', lr)
-
-
-        # if (switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window]))) or switch_ASGD == True:
-            
-            # if switch_ASGD == False:
-            #     print('Switching to ASGD FIRST')
-            #     switch_ASGD = True            
-            #     moving_avg_weights.set_sum_weights(best_weights)
-            #     optimizer.param_groups[0]['lr'] = 1
-            
-            # else:
-            #     iteration_weight += 1
-            #     print("ASGD iteration: ", iteration_weight)
-            #     tmp = {}
-            #     for prm in model.parameters():
-            #         tmp[prm] = prm.data.clone()
-            #         # prm.data = optimizer.state[prm]['ax'].clone()
-            #         sum_weights[prm] += tmp[prm]
-
-            #         avg_weights = sum_weights[prm]/iteration_weight
-            #         prm.data = avg_weights.data.clone()
 
     best_model.to(DEVICE)
     final_ppl,  _ = eval_loop(test_loader, criterion_eval, best_model)
@@ -177,8 +139,4 @@ if __name__ == "__main__":
     name_exercise = "PART_22"
     save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, ppl_dev_list, hid_size, 
                 emb_size, lr, clip, vocab_len, final_epoch,best_ppl, final_ppl, batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model)
-
-
-
-
 
