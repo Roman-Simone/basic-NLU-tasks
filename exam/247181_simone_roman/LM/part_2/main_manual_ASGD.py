@@ -22,10 +22,10 @@ if __name__ == "__main__":
     batch_size_dev = 64
     batch_size_test = 64
     
-    hid_size = 650
-    emb_size = 650
+    hid_size = 300
+    emb_size = 300
 
-    lr = 10 # This is definitely not good for SGD
+    lr = 5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
     
     #*###############################################################################################
@@ -101,23 +101,28 @@ if __name__ == "__main__":
                 tmp[prm] = prm.data.clone()
             
             queue_weights.append(tmp)
+            sum_weights = {prm: torch.zeros_like(prm) for prm in model.parameters()}
 
             for elem in queue_weights:
                 for prm in model.parameters():
                     sum_weights[prm] += elem[prm]
-                    avg_weights[prm] = sum_weights[prm]/iteration_weight
-                    prm.data = avg_weights[prm].data.clone()
+
+
+            for prm in model.parameters():
+                avg_weights[prm] = sum_weights[prm]/iteration_weight
+                prm.data = avg_weights[prm].data.clone()
                 
 
         ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
         ppl_dev_list.append(ppl_dev)
         losses_dev.append(np.asarray(loss_dev).mean())
-        pbar.set_description("PPL: %f" % ppl_dev)
+        pbar.set_description(f"PPL: {ppl_dev} lr = {lr} , ASGD = {switch_ASGD}")
 
         if switch_ASGD:
             for prm in model.parameters():
-                # prm.data = tmp[prm].clone()
-                queue_weights[iteration_weight][prm] = tmp[prm].clone()
+                # continue
+                prm.data = tmp[prm].clone()
+                # queue_weights[iteration_weight][prm] = tmp[prm].clone()
 
         if  ppl_dev < best_ppl: # the lower, the better
             best_ppl = ppl_dev
@@ -127,11 +132,10 @@ if __name__ == "__main__":
             patience = 3
         elif ppl_dev > best_ppl and switch_ASGD:
             patience -= 1
-            lr=lr/2
 
         if epoch % 5 == 0:
-            lr = lr - 0.75
-            print('Learning rate changed to: ', lr)
+            lr /= 2
+            # print('Learning rate changed to: ', lr)
             optimizer.param_groups[0]['lr'] = lr
 
         if patience <= 0 and switch_ASGD: # Early stopping with patience
@@ -139,12 +143,14 @@ if __name__ == "__main__":
 
         if switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window])):
 
-            print('Switching to ASGD FIRST')
+            # print('Switching to ASGD FIRST')
             switch_ASGD = True            
             sum_weights = best_weights
             avg_weights = best_weights
             queue_weights.append(best_weights)
-            print()
+            for prm in model.parameters():
+                prm.data = best_weights[prm].clone()
+            # print()
 
 
     best_model.to(DEVICE)

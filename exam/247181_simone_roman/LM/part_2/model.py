@@ -100,7 +100,7 @@ class VariationalDropout(nn.Module):
         # dropout_mask = torch.bernoulli(torch.full((batch_size, emb_size)), 1 - self.prob)
         # dropout_mask = dropout_mask.unsqueeze(0).unsqueeze(2)
         benoulli = torch.distributions.bernoulli.Bernoulli(probs= 1 - self.prob)
-        maskk = benoulli.sample((1,1,emb_size)).to(DEVICE)
+        maskk = benoulli.sample((batch_size,1,emb_size)).to(DEVICE)
         mask_expanded = maskk.expand_as(input)
         #output
         output = input * mask_expanded / (1 - self.prob)

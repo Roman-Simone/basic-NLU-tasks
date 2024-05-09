@@ -18,12 +18,12 @@ if __name__ == "__main__":
     
     #!PARAMETERS
 
-    batch_size_train = 32
+    batch_size_train = 20
     batch_size_dev = 64
     batch_size_test = 64
     
-    hid_size = 650
-    emb_size = 650
+    hid_size = 500
+    emb_size = 500
 
     lr = 10 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
@@ -109,7 +109,7 @@ if __name__ == "__main__":
 
             if len(losses_dev)>window and loss_dev > min(losses_dev[:-window]):
                 print('Switching to ASGD')
-                optimizer = torch.optim.ASGD(best_weights, lr=2, t0=0, lambd=0., weight_decay=1.2e-06)
+                optimizer = torch.optim.ASGD(best_weights, lr=lr, t0=0, lambd=0., weight_decay=1.2e-06)
             
 
 
@@ -121,10 +121,9 @@ if __name__ == "__main__":
             patience = 3
         elif ppl_dev > best_ppl and 't0' in optimizer.param_groups[0]:
             patience -= 1
-            lr=lr/2
 
         if epoch % 5 == 0:
-            lr = lr - 0.75
+            lr /= 2
             print('Learning rate changed to: ', lr)
             optimizer.param_groups[0]['lr'] = lr
 
