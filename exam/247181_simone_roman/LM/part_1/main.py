@@ -5,8 +5,17 @@
 from functions import *
 from utils import *
 from model import *
+
+from functools import partial
+from torch.utils.data import DataLoader
+import torch.optim as optim
+from tqdm import tqdm
+import copy
+import math
 import os
 
+
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
 if __name__ == "__main__":
 
     #!PARAMETERS
