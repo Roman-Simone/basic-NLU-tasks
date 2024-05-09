@@ -7,6 +7,7 @@ import torch
 import torch.utils.data as data
 from torch.utils.data import DataLoader
 from functions import *
+from sklearn.model_selection import train_test_split
 
 PAD_TOKEN = 0
 def load_data(path):
@@ -18,6 +19,33 @@ def load_data(path):
     with open(path) as f:
         dataset = json.loads(f.read())
     return dataset
+
+def create_dev(tmp_train_raw):
+    # First we get the 10% of the training set, then we compute the percentage of these examples 
+    portion = 0.10
+
+    intents = [x['intent'] for x in tmp_train_raw] # We stratify on intents
+    count_y = Counter(intents)
+
+    labels = []
+    inputs = []
+    mini_train = []
+    for id_y, y in enumerate(intents):
+        if count_y[y] > 1: # If some intents occurs only once, we put them in training
+            inputs.append(tmp_train_raw[id_y])
+            labels.append(y)
+        else:
+            mini_train.append(tmp_train_raw[id_y])
+    # Random Stratify
+    X_train, X_dev, y_train, y_dev = train_test_split(inputs, labels, test_size=portion, 
+                                                        random_state=42, 
+                                                        shuffle=True,
+                                                        stratify=labels)
+    X_train.extend(mini_train)
+    train_raw = X_train
+    dev_raw = X_dev
+
+    return train_raw, dev_raw
 
 
 

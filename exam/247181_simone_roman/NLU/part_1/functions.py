@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report
 
 
 
-device = 'mps' # cuda:0 means we are using the GPU with id 0, if you have multiple GPU
+device = 'cuda' # cuda:0 means we are using the GPU with id 0, if you have multiple GPU
 os.environ['CUDA_LAUNCH_BLOCKING'] = "1" # Used to report errors on CUDA side
 
 
