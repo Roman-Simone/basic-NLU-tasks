@@ -17,25 +17,32 @@ from pprint import pprint
 
 
 if __name__ == "__main__":
-    #Write the code to load the datasets and to run your functions
-    # Print the results
+
+    # Load the data
+    # exampleod element -> {'utterance': 'what is the cost for these flights from baltimore to philadelphia', 
+    #                       'slots': 'O O O O O O O O B-fromloc.city_name O B-toloc.city_name', 
+    #                       'intent': 'airfare'}
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    tmp_train_raw = load_data(os.path.join(current_dir, "dataset/ATIS/train.json"))
+    tmp_train_raw = load_data(os.path.join(current_dir, "dataset/ATIS/train.json"))  
     test_raw = load_data(os.path.join(current_dir, "dataset/ATIS/test.json"))
 
+    # Create the dev set
     train_raw, dev_raw = create_dev(tmp_train_raw)
 
+    # All the words in the train
     words = sum([x['utterance'].split() for x in train_raw], []) # No set() since we want to compute 
-                                                            # the cutoff
+    # All dataset
     corpus = train_raw + dev_raw + test_raw # We do not wat unk labels, 
-                                            # however this depends on the research purpose
-
     slots = set(sum([line['slots'].split() for line in corpus],[]))
     intents = set([line['intent'] for line in corpus])
+
+    # Create an id for each word, intent and slot ex -> {0: 'pad', 1: 'unk', 2: 'what', 3: 'is', 4: 'the', 5: 'cost', 6: 'for'...}
     lang = Lang(words, intents, slots, cutoff=0)
 
-
     # Create our datasets
+    #Create the tensoer ecc ex->{'utterance': tensor([ 2.,  3.,  4., 35., 22.,  9., 36., 11., 37., 38., 24., 39.]), 
+    #                            'slots': tensor([ 20.,  20.,  20.,  86.,  20.,  20.,  87.,  20., 118.,  37.,  20., 127.]), 
+    #                            'intent': 17}
     train_dataset = IntentsAndSlots(train_raw, lang)
     dev_dataset = IntentsAndSlots(dev_raw, lang)
     test_dataset = IntentsAndSlots(test_raw, lang)
@@ -43,7 +50,7 @@ if __name__ == "__main__":
     # Dataloader instantiations
     train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)    
 
 
     hid_size = 200
@@ -56,32 +63,21 @@ if __name__ == "__main__":
     out_int = len(lang.intent2id)
     vocab_len = len(lang.word2id)
 
-    model = ModelIAS(hid_size, out_slot, out_int, emb_size, vocab_len, pad_index=PAD_TOKEN).to(device)
+    model = ModelIAS(hid_size, out_slot, out_int, emb_size, vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
     model.apply(init_weights)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
-    
-
-    hid_size = 200
-    emb_size = 300
-
-    lr = 0.0001 # learning rate
-    clip = 5 # Clip the gradient
 
 
-    out_slot = len(lang.slot2id)
-    out_int = len(lang.intent2id)
-    vocab_len = len(lang.word2id)
-
-    n_epochs = 200
-    runs = 5
+    n_epochs = 2
+    runs = 1
 
     slot_f1s, intent_acc = [], []
     for x in tqdm(range(0, runs)):
         model = ModelIAS(hid_size, out_slot, out_int, emb_size, 
-                        vocab_len, pad_index=PAD_TOKEN).to(device)
+                        vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
         model.apply(init_weights)
 
         optimizer = optim.Adam(model.parameters(), lr=lr)
@@ -116,19 +112,9 @@ if __name__ == "__main__":
                                                 criterion_intents, model, lang)
         intent_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
+
+
     slot_f1s = np.asarray(slot_f1s)
     intent_acc = np.asarray(intent_acc)
     print('Slot F1', round(slot_f1s.mean(),3), '+-', round(slot_f1s.std(),3))
     print('Intent Acc', round(intent_acc.mean(), 3), '+-', round(slot_f1s.std(), 3))
-
-    # BERT model script from: huggingface.co
-    tokenizer = BertTokenizer.from_pretrained("bert-base-uncased") # Download the tokenizer
-    model = BertModel.from_pretrained("bert-base-uncased") # Download the model
-
-    inputs = tokenizer(["I saw a man with a telescope", "StarLord was here",  "I didn't"], return_tensors="pt", padding=True)
-    pprint(inputs)
-    outputs = model(**inputs)
-
-    last_hidden_states = outputs.last_hidden_state
-    print(inputs["input_ids"][0])
-    print(tokenizer.convert_ids_to_tokens(inputs["input_ids"][1]))

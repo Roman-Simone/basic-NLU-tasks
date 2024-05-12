@@ -9,8 +9,10 @@ from sklearn.metrics import classification_report
 
 
 
-device = 'cuda' # cuda:0 means we are using the GPU with id 0, if you have multiple GPU
-os.environ['CUDA_LAUNCH_BLOCKING'] = "1" # Used to report errors on CUDA side
+device = torch.device("cuda" if torch.cuda.is_available() else "mps")
+
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
+# os.environ['CUDA_LAUNCH_BLOCKING'] = "1" # Used to report errors on CUDA side
 
 
 
