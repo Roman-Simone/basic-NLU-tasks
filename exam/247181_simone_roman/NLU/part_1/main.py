@@ -30,8 +30,7 @@ if __name__ == "__main__":
     train_raw, dev_raw = create_dev(tmp_train_raw)
 
     # All the words in the train
-    words = sum([x['utterance'].split() for x in train_raw], []) # No set() since we want to compute 
-    # All dataset
+    words = sum([x['utterance'].split() for x in train_raw], []) # No set() since we want to compute All dataset
     corpus = train_raw + dev_raw + test_raw # We do not wat unk labels, 
     slots = set(sum([line['slots'].split() for line in corpus],[]))
     intents = set([line['intent'] for line in corpus])
