@@ -75,9 +75,6 @@ class Lang():
         for elem in elements:
                 vocab[elem] = len(vocab)
         return vocab
-    
-
-
 
 
 class IntentsAndSlots (data.Dataset):
