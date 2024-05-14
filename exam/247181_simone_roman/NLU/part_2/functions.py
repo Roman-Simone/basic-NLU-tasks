@@ -1,6 +1,9 @@
 # Add the class of your model only
 # Here is where you define the architecture of your model using pytorch
 import torch
+from transformers import BertTokenizer
+from conll import evaluate
+from sklearn.metrics import classification_report
 
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
@@ -55,6 +58,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang):
                 gt_ids = sample['y_slots'][id_seq].tolist()
                 gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
                 # utterance = [lang.id2word[elem] for elem in utt_ids]
+                tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
                 utterance = tokenizer.convert_ids_to_tokens(utt_ids)
                 to_decode = seq[:length].tolist()
                 ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])

@@ -84,14 +84,14 @@ if __name__ == "__main__":
                 sampled_ephocs.append(x)
                 losses_train.append(np.asarray(loss).mean())
                 eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang)
-                # losses_dev.append(np.asarray(loss_dev).mean())
-                # f1 = results_dev['total']['f']
+                results_dev, intent_res, loss_dev = losses_dev.append(np.asarray(loss_dev).mean())
+                f1 = results_dev['total']['f']
 
-                # if f1 > best_f1:
-                #     best_f1 = f1
-                # else:
-                #     patience -= 1
-                # if patience <= 0: # Early stopping with patient
-                #     break # Not nice but it keeps the code clean
+                if f1 > best_f1:
+                    best_f1 = f1
+                else:
+                    patience -= 1
+                if patience <= 0: # Early stopping with patient
+                    break # Not nice but it keeps the code clean
 
 
