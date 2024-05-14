@@ -5,6 +5,7 @@ from collections import Counter
 from sklearn.model_selection import train_test_split
 import torch.utils.data as data
 
+
 PAD_TOKEN = 0
 CLS_TOKEN = 101
 SEP_TOKEN = 102
@@ -51,7 +52,7 @@ def create_dev(tmp_train_raw):
 
 
 class Lang():
-    def __init__(self, words, intents, slots, cutoff=0, tokenizer=None):
+    def __init__(self, intents, slots, cutoff=0):
         self.tokenizer = tokenizer
         self.word2id = self.w2id(words, cutoff=cutoff, unk=True, tokenizer=tokenizer)
         self.slot2id = self.lab2id(slots)
@@ -69,28 +70,28 @@ class Lang():
         for elem in elements:   
             tmp_inputs = tokenizer(elem)
             tmp_inputs = tmp_inputs[1:-1]
-            vocab[elem] = int(tmp_inputs["input_ids"][0])
+
+            # print(tokenizer.convert_ids_to_tokens(tmp_inputs["input_ids"]))
             # Use the real label id for the first token of the word, and padding ids for the remaining tokens
             # slot_labels_ids.extend([int(slot_label)] + [PAD_TOKEN] * (len(tmp_inputs) - 1))
         
         return vocab
     
     def lab2id(self, elements, pad=True):
-        vocab = {'pad': PAD_TOKEN,
-                '[CLS]': PAD_TOKEN,
-                '[SEP]': PAD_TOKEN}
+        vocab = {}
         if pad:
             vocab['pad'] = PAD_TOKEN
         for elem in elements:
                 vocab[elem] = int(len(vocab))
         return vocab
+    
 
 
 
 
 class IntentsAndSlots (data.Dataset):
     # Mandatory methods are __init__, __len__ and __getitem__
-    def __init__(self, dataset, lang, unk='unk'):
+    def __init__(self, dataset, lang, tokenizer, unk='unk'):
         self.utterances = []
         self.intents = []
         self.slots = []
@@ -98,11 +99,14 @@ class IntentsAndSlots (data.Dataset):
         
         for x in dataset:
             self.utterances.append("[CLS] " + x['utterance'] + " [SEP]")
-            self.slots.append("[CLS] " + x['slots'] + " [SEP]")
+            self.slots.append("O " + x['slots'] + " O")
             self.intents.append(x['intent'])
 
-        self.utt_ids = self.mapping_seq(self.utterances, lang.word2id)
-        self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
+        # self.utt_ids = self.mapping_seq(self.utterances, lang.word2id)
+        # self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
+
+        self.utt_ids, self.slots_ids = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
+        self.check_len(self.utt_ids, self.slots_ids)
         self.intent_ids = self.mapping_lab(self.intents, lang.intent2id)
 
     def __len__(self):
@@ -120,17 +124,36 @@ class IntentsAndSlots (data.Dataset):
     def mapping_lab(self, data, mapper):
         return [mapper[x] if x in mapper else mapper[self.unk] for x in data]
     
-    def mapping_seq(self, data, mapper): # Map sequences to number
-        res = []
-        for seq in data:
-            tmp_seq = []
-            for x in seq.split():
-                if x in mapper:
-                    tmp_seq.append(int(mapper[x]))
-                else:
-                    tmp_seq.append(mapper[self.unk])
-            res.append(tmp_seq)
-        return res
+    def mapping_seq(self, utterance, slots, tokenizer, mapper_slot): # Map sequences to number
+        res_utterance = []
+        res_slots = []
+
+
+        for sequence, slot in zip(utterance, slots):
+            tmp_utt = []
+            tmp_slot = []
+            for word, label in zip(sequence.split(), slot.split()):
+                tmp_seq = []
+                tmp_slot = []
+                for word, element in zip(sequence.split(), slot.split(' ')):
+                    word_tokens = tokenizer(word)
+                    #remove CLS and SEP tokens
+                    word_tokens = word_tokens[1:-1]
+                    tmp_seq.extend(word_tokens["input_ids"])
+
+                    tmp_slot.extend([mapper_slot[element]] + [mapper_slot['pad']] * (len(word_tokens["input_ids"]) - 1))
+        
+                res_utterance.append(tmp_seq)
+                res_slots.append(tmp_slot)
+
+        
+        return res_utterance, res_slots
+    
+    def check_len(self, utt_ids, slots_ids):
+        for utt, slot in zip(utt_ids, slots_ids):
+            if len(utt) != len(slot):
+                print("Error: Lengths do not match")
+        return True
 
 
 

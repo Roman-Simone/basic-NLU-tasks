@@ -32,13 +32,17 @@ if __name__ == "__main__":
 
     lang = Lang(words, intents, slots, cutoff=0, tokenizer=tokenizer)
 
-    train_dataset = IntentsAndSlots(train_raw, lang)
-    dev_dataset = IntentsAndSlots(dev_raw, lang)
-    test_dataset = IntentsAndSlots(test_raw, lang)
 
-    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
-    dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
+
+    train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
+    dev_dataset = IntentsAndSlots(dev_raw, lang, tokenizer)
+    test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
+
+    
+
+    # train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
+    # dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
+    # test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
 
 
 
