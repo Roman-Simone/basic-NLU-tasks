@@ -3,6 +3,7 @@ from utils import *
 from model import *
 
 import os
+import numpy as np
 from tqdm import tqdm
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -14,12 +15,14 @@ from transformers import BertTokenizer
 
 
 if __name__ == "__main__":
+    print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     tmp_train_raw = load_data(os.path.join(current_dir, "dataset/ATIS/train.json"))
     test_raw = load_data(os.path.join(current_dir, "dataset/ATIS/test.json"))
 
     #create the dev set 
     train_raw, dev_raw = create_dev(tmp_train_raw)
+    print("CREATE DEV SET")
 
     # All the words in the train
     corpus = train_raw + dev_raw + test_raw # We do not wat unk labels, 
@@ -29,6 +32,7 @@ if __name__ == "__main__":
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 
     lang = Lang(intents, slots, cutoff=0)
+    print("CREATE LANG")
 
     train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
     dev_dataset = IntentsAndSlots(dev_raw, lang, tokenizer)
@@ -37,6 +41,7 @@ if __name__ == "__main__":
     train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
     test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
+    print("CREATE DATALOADERS")
 
 
 
@@ -54,7 +59,7 @@ if __name__ == "__main__":
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
-    n_epochs = 2
+    n_epochs = 10
     runs = 1
 
     slot_f1s, intent_acc = [], []
@@ -74,4 +79,19 @@ if __name__ == "__main__":
         for epoch in range(1, n_epochs):
             loss = train_loop(train_loader, optimizer, criterion_slots, 
                             criterion_intents, model)
+
+            if x % 5 == 0:
+                sampled_ephocs.append(x)
+                losses_train.append(np.asarray(loss).mean())
+                eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang)
+                # losses_dev.append(np.asarray(loss_dev).mean())
+                # f1 = results_dev['total']['f']
+
+                # if f1 > best_f1:
+                #     best_f1 = f1
+                # else:
+                #     patience -= 1
+                # if patience <= 0: # Early stopping with patient
+                #     break # Not nice but it keeps the code clean
+
 

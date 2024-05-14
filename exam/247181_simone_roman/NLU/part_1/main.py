@@ -70,8 +70,8 @@ if __name__ == "__main__":
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
 
-    n_epochs = 2
-    runs = 1
+    n_epochs = 200
+    runs = 5
 
     slot_f1s, intent_acc = [], []
     for x in tqdm(range(0, runs)):
