@@ -13,7 +13,7 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
 
         optimizer.zero_grad() # Zeroing the gradient
         # print(sample['utterances'])
-        slots, intent = model(sample['utterances'])
+        slots, intent = model(sample['utterances'], sample["attentions"])
         loss_intent = criterion_intents(intent, sample['intents'])
         loss_slot = criterion_slots(slots, sample['y_slots'])
         loss = loss_intent + loss_slot
@@ -25,7 +25,7 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
 
     return loss_array
 
-def eval_loop(data, criterion_slots, criterion_intents, model, lang):
+def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
     model.eval()
     loss_array = []
 
@@ -37,7 +37,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang):
 
     with torch.no_grad():
         for sample in data:
-            slots, intents = model(sample["utterances"])
+            slots, intents = model(sample["utterances"], sample["attentions"])
             loss_intent = criterion_intents(intents, sample['intents'])
             loss_slot = criterion_slots(slots, sample['y_slots'])
             loss = loss_intent + loss_slot 
@@ -58,14 +58,18 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang):
                 gt_ids = sample['y_slots'][id_seq].tolist()
                 gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
                 # utterance = [lang.id2word[elem] for elem in utt_ids]
-                tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
                 utterance = tokenizer.convert_ids_to_tokens(utt_ids)
+                
                 to_decode = seq[:length].tolist()
+                
                 ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
+                # print(ref_slots)
+                
                 tmp_seq = []
                 for id_el, elem in enumerate(to_decode):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
                 hyp_slots.append(tmp_seq)
+
     try:            
         results = evaluate(ref_slots, hyp_slots)
     except Exception as ex:

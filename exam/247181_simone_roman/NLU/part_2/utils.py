@@ -25,7 +25,7 @@ def load_data(path):
 
 def create_dev(tmp_train_raw):
     # First we get the 10% of the training set, then we compute the percentage of these examples 
-    portion = 0.10
+    portion = 0.03
 
     intents = [x['intent'] for x in tmp_train_raw] # We stratify on intents
     count_y = Counter(intents)
@@ -87,7 +87,7 @@ class IntentsAndSlots (data.Dataset):
         # self.utt_ids = self.mapping_seq(self.utterances, lang.word2id)
         # self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
 
-        self.utt_ids, self.slots_ids = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
+        self.utt_ids, self.slots_ids, self.attention_mask = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
         # self.check_len(self.utt_ids, self.slots_ids)
         self.intent_ids = self.mapping_lab(self.intents, lang.intent2id)
 
@@ -98,7 +98,8 @@ class IntentsAndSlots (data.Dataset):
         utt = torch.Tensor(self.utt_ids[idx])
         slots = torch.Tensor(self.slots_ids[idx])
         intent = self.intent_ids[idx]
-        sample = {'utterance': utt, 'slots': slots, 'intent': intent}
+        attention = torch.Tensor(self.attention_mask[idx])
+        sample = {'utterance': utt, 'slots': slots, 'intent': intent, 'attention': attention}
         return sample
     
     # Auxiliary methods
@@ -109,27 +110,33 @@ class IntentsAndSlots (data.Dataset):
     def mapping_seq(self, utterance, slots, tokenizer, mapper_slot): # Map sequences to number
         res_utterance = []
         res_slots = []
-
+        res_attention = []
 
         for sequence, slot in zip(utterance, slots):
-            tmp_utt = []
+
+            tmp_seq = []
             tmp_slot = []
-            for word, label in zip(sequence.split(), slot.split()):
-                tmp_seq = []
-                tmp_slot = []
-                for word, element in zip(sequence.split(), slot.split(' ')):
-                    word_tokens = tokenizer(word)
-                    #remove CLS and SEP tokens
-                    word_tokens = word_tokens[1:-1]
-                    tmp_seq.extend(word_tokens["input_ids"])
+            tmp_attention = []
 
-                    tmp_slot.extend([mapper_slot[element]] + [mapper_slot['pad']] * (len(word_tokens["input_ids"]) - 1))
-        
-                res_utterance.append(tmp_seq)
-                res_slots.append(tmp_slot)
+            for word, element in zip(sequence.split(), slot.split(' ')):
+                tmp_attention.append(1)
+
+                word_tokens = tokenizer(word)
+                #remove CLS and SEP tokens
+                word_tokens = word_tokens[1:-1]
+                tmp_seq.extend(word_tokens["input_ids"])
+
+                tmp_slot.extend([mapper_slot[element]] + [mapper_slot['pad']] * (len(word_tokens["input_ids"]) - 1))
+
+                for i in range(len(word_tokens["input_ids"])-1):
+                    tmp_attention.append(0)
+
+            res_utterance.append(tmp_seq)
+            res_slots.append(tmp_slot)
+            res_attention.append(tmp_attention)
 
         
-        return res_utterance, res_slots
+        return res_utterance, res_slots, res_attention
     
     def check_len(self, utt_ids, slots_ids):
         for utt, slot in zip(utt_ids, slots_ids):
@@ -155,6 +162,8 @@ def collate_fn(data):
         # print(padded_seqs)
         padded_seqs = padded_seqs.detach()  # We remove these tensors from the computational graph
         return padded_seqs, lengths
+    
+
     # Sort data by seq lengths
     data.sort(key=lambda x: len(x['utterance']), reverse=True) 
     new_item = {}
@@ -165,16 +174,22 @@ def collate_fn(data):
     src_utt, _ = merge(new_item['utterance'])
     y_slots, y_lengths = merge(new_item["slots"])
     intent = torch.LongTensor(new_item["intent"])
+    attention, _ = merge(new_item["attention"])
+    print(attention)
     
     src_utt = src_utt.to(device) # We load the Tensor on our selected device
     y_slots = y_slots.to(device)
     intent = intent.to(device)
     y_lengths = torch.LongTensor(y_lengths).to(device)
+    attention = attention.to(device)
     
     new_item["utterances"] = src_utt
     new_item["intents"] = intent
     new_item["y_slots"] = y_slots
     new_item["slots_len"] = y_lengths
+    new_item["attentions"] = attention
+
+    
     return new_item
 
 

@@ -34,13 +34,14 @@ if __name__ == "__main__":
     lang = Lang(intents, slots, cutoff=0)
     print("CREATE LANG")
 
-    train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
+    # train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
     dev_dataset = IntentsAndSlots(dev_raw, lang, tokenizer)
-    test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
+    # test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
 
-    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
+    train_loader = DataLoader(dev_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
+    test_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
+
     print("CREATE DATALOADERS")
 
 
@@ -60,7 +61,7 @@ if __name__ == "__main__":
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
         
-    n_epochs = 20
+    n_epochs = 5
     patience = 3
     losses_train = []
     losses_dev = []
@@ -69,26 +70,25 @@ if __name__ == "__main__":
     for x in tqdm(range(1,n_epochs)):
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=clip)
-        if x % 5 == 0: # We check the performance every 5 epochs
-            sampled_epochs.append(x)
-            losses_train.append(np.asarray(loss).mean())
-            results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, 
-                                                        criterion_intents, model, lang)
-            losses_dev.append(np.asarray(loss_dev).mean())
-            
-            f1 = results_dev['total']['f']
-            # For decreasing the patience you can also use the average between slot f1 and intent accuracy
-            if f1 > best_f1:
-                best_f1 = f1
-                # Here you should save the model
-                patience = 3
-            else:
-                patience -= 1
-            if patience <= 0: # Early stopping with patience
-                break # Not nice but it keeps the code clean
+        # if x % 5 == 0: # We check the performance every 5 epochs
+        sampled_epochs.append(x)
+        losses_train.append(np.asarray(loss).mean())
+        results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang, tokenizer)
+        losses_dev.append(np.asarray(loss_dev).mean())
+        print(loss_dev)
+        
+        f1 = results_dev['total']['f']
+        # For decreasing the patience you can also use the average between slot f1 and intent accuracy
+        if f1 > best_f1:
+            best_f1 = f1
+            # Here you should save the model
+            patience = 3
+        else:
+            patience -= 1
+        if patience <= 0: # Early stopping with patience
+            break # Not nice but it keeps the code clean
 
-    results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, 
-                                            criterion_intents, model, lang)    
+    results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, model, lang, tokenizer)    
     print('Slot F1: ', results_test['total']['f'])
     print('Intent Accuracy:', intent_test['accuracy'])
 

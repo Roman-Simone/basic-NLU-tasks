@@ -15,14 +15,11 @@ class ModelBert(nn.Module):
     
         self.slot_out = nn.Linear(hid_size, out_slot)
         self.intent_out = nn.Linear(hid_size, out_int)
-
-        # Dropout layer How/Where do we apply it?
-        self.dropout = nn.Dropout(0.1)
         
-    def forward(self, utterances):
+    def forward(self, utterances, attentions=None):
         
         # Get the BERT output
-        outputs = self.bert(utterances)
+        outputs = self.bert(utterances, attention_mask=attentions)
 
         sequence_output = outputs[0]
         pooled_output = outputs[1]  # [CLS]
