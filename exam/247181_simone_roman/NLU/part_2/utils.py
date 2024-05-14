@@ -53,29 +53,11 @@ def create_dev(tmp_train_raw):
 
 class Lang():
     def __init__(self, intents, slots, cutoff=0):
-        self.tokenizer = tokenizer
-        self.word2id = self.w2id(words, cutoff=cutoff, unk=True, tokenizer=tokenizer)
         self.slot2id = self.lab2id(slots)
         self.intent2id = self.lab2id(intents, pad=False)
-        self.id2word = {v:k for k, v in self.word2id.items()}
         self.id2slot = {v:k for k, v in self.slot2id.items()}
         self.id2intent = {v:k for k, v in self.intent2id.items()}
         
-    def w2id(self, elements, cutoff=None, unk=True, tokenizer=None):
-        vocab = {'pad': PAD_TOKEN,
-                '[CLS]': CLS_TOKEN,
-                '[SEP]': SEP_TOKEN,
-                'unk': tokenizer.unk_token_id}
-        
-        for elem in elements:   
-            tmp_inputs = tokenizer(elem)
-            tmp_inputs = tmp_inputs[1:-1]
-
-            # print(tokenizer.convert_ids_to_tokens(tmp_inputs["input_ids"]))
-            # Use the real label id for the first token of the word, and padding ids for the remaining tokens
-            # slot_labels_ids.extend([int(slot_label)] + [PAD_TOKEN] * (len(tmp_inputs) - 1))
-        
-        return vocab
     
     def lab2id(self, elements, pad=True):
         vocab = {}
@@ -106,7 +88,7 @@ class IntentsAndSlots (data.Dataset):
         # self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
 
         self.utt_ids, self.slots_ids = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
-        self.check_len(self.utt_ids, self.slots_ids)
+        # self.check_len(self.utt_ids, self.slots_ids)
         self.intent_ids = self.mapping_lab(self.intents, lang.intent2id)
 
     def __len__(self):
@@ -114,7 +96,7 @@ class IntentsAndSlots (data.Dataset):
 
     def __getitem__(self, idx):
         utt = torch.Tensor(self.utt_ids[idx])
-        slots = torch.Tensor(self.slot_ids[idx])
+        slots = torch.Tensor(self.slots_ids[idx])
         intent = self.intent_ids[idx]
         sample = {'utterance': utt, 'slots': slots, 'intent': intent}
         return sample
@@ -154,8 +136,6 @@ class IntentsAndSlots (data.Dataset):
             if len(utt) != len(slot):
                 print("Error: Lengths do not match")
         return True
-
-
 
 
 def collate_fn(data):
