@@ -25,7 +25,7 @@ def load_data(path):
 
 def create_dev(tmp_train_raw):
     # First we get the 10% of the training set, then we compute the percentage of these examples 
-    portion = 0.03
+    portion = 0.10
 
     intents = [x['intent'] for x in tmp_train_raw] # We stratify on intents
     count_y = Counter(intents)
