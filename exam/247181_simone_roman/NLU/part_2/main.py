@@ -11,9 +11,6 @@ from transformers import BertTokenizer
 
 
 
-
-
-
 if __name__ == "__main__":
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -34,13 +31,13 @@ if __name__ == "__main__":
     lang = Lang(intents, slots, cutoff=0)
     print("CREATE LANG")
 
-    # train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
+    train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
     dev_dataset = IntentsAndSlots(dev_raw, lang, tokenizer)
-    # test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
+    test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
 
-    train_loader = DataLoader(dev_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
     dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
 
     print("CREATE DATALOADERS")
 
@@ -61,7 +58,7 @@ if __name__ == "__main__":
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
         
-    n_epochs = 5
+    n_epochs = 50
     patience = 3
     losses_train = []
     losses_dev = []

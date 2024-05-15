@@ -13,7 +13,7 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
 
         optimizer.zero_grad() # Zeroing the gradient
         # print(sample['utterances'])
-        slots, intent = model(sample['utterances'], sample["attentions"])
+        slots, intent = model(sample['utterances'], sample["attentions"], sample["token_type_ids"])
         loss_intent = criterion_intents(intent, sample['intents'])
         loss_slot = criterion_slots(slots, sample['y_slots'])
         loss = loss_intent + loss_slot
@@ -37,7 +37,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
 
     with torch.no_grad():
         for sample in data:
-            slots, intents = model(sample["utterances"], sample["attentions"])
+            slots, intents = model(sample["utterances"], sample["attentions"], sample["token_type_ids"])
             loss_intent = criterion_intents(intents, sample['intents'])
             loss_slot = criterion_slots(slots, sample['y_slots'])
             loss = loss_intent + loss_slot 
@@ -59,18 +59,17 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
                 # utterance = [lang.id2word[elem] for elem in utt_ids]
                 utterance = tokenizer.convert_ids_to_tokens(utt_ids)
-                
-                to_decode = seq[:length].tolist()
                 ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
-                # print(ref_slots)
+                
+                
+                to_decode = seq[:length].tolist()  
                 
                 tmp_seq = []
-                prova = []
                 for id_el, elem in enumerate(to_decode):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
 
                 hyp_slots.append(tmp_seq)
-                # print(hyp_slots)
+
 
     try:            
         results = evaluate(ref_slots, hyp_slots)

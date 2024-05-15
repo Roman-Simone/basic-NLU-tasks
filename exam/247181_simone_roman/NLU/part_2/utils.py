@@ -87,7 +87,7 @@ class IntentsAndSlots (data.Dataset):
         # self.utt_ids = self.mapping_seq(self.utterances, lang.word2id)
         # self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
 
-        self.utt_ids, self.slots_ids, self.attention_mask = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
+        self.utt_ids, self.slots_ids, self.attention_mask, self.token_type_id = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
         # self.check_len(self.utt_ids, self.slots_ids)
         self.intent_ids = self.mapping_lab(self.intents, lang.intent2id)
 
@@ -99,7 +99,8 @@ class IntentsAndSlots (data.Dataset):
         slots = torch.Tensor(self.slots_ids[idx])
         intent = self.intent_ids[idx]
         attention = torch.Tensor(self.attention_mask[idx])
-        sample = {'utterance': utt, 'slots': slots, 'intent': intent, 'attention': attention}
+        token_type_id = torch.Tensor(self.token_type_id[idx])
+        sample = {'utterance': utt, 'slots': slots, 'intent': intent, 'attention': attention, 'token_type_id': token_type_id}
         return sample
     
     # Auxiliary methods
@@ -111,15 +112,18 @@ class IntentsAndSlots (data.Dataset):
         res_utterance = []
         res_slots = []
         res_attention = []
+        res_token_type_id = []
 
         for sequence, slot in zip(utterance, slots):
 
             tmp_seq = []
             tmp_slot = []
             tmp_attention = []
+            tmp_token_type_id = []
 
             for word, element in zip(sequence.split(), slot.split(' ')):
                 tmp_attention.append(1)
+                tmp_token_type_id.append(0)
 
                 word_tokens = tokenizer(word)
                 #remove CLS and SEP tokens
@@ -130,13 +134,15 @@ class IntentsAndSlots (data.Dataset):
 
                 for i in range(len(word_tokens["input_ids"])-1):
                     tmp_attention.append(0)
+                    tmp_token_type_id.append(0)
 
             res_utterance.append(tmp_seq)
             res_slots.append(tmp_slot)
             res_attention.append(tmp_attention)
+            res_token_type_id.append(tmp_token_type_id)
 
         
-        return res_utterance, res_slots, res_attention
+        return res_utterance, res_slots, res_attention, res_token_type_id
     
     def check_len(self, utt_ids, slots_ids):
         for utt, slot in zip(utt_ids, slots_ids):
@@ -175,20 +181,22 @@ def collate_fn(data):
     y_slots, y_lengths = merge(new_item["slots"])
     intent = torch.LongTensor(new_item["intent"])
     attention, _ = merge(new_item["attention"])
+    token_type_id, _ = merge(new_item["token_type_id"])
     
     src_utt = src_utt.to(device) # We load the Tensor on our selected device
     y_slots = y_slots.to(device)
     intent = intent.to(device)
     y_lengths = torch.LongTensor(y_lengths).to(device)
     attention = attention.to(device)
+    token_type_id = token_type_id.to(device)
     
     new_item["utterances"] = src_utt
     new_item["intents"] = intent
     new_item["y_slots"] = y_slots
     new_item["slots_len"] = y_lengths
     new_item["attentions"] = attention
+    new_item["token_type_ids"] = token_type_id
 
-    
     return new_item
 
 

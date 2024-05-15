@@ -16,10 +16,10 @@ class ModelBert(nn.Module):
         self.slot_out = nn.Linear(hid_size, out_slot)
         self.intent_out = nn.Linear(hid_size, out_int)
         
-    def forward(self, utterances, attentions=None):
+    def forward(self, utterances, attentions=None, token_type_ids=None):
         
         # Get the BERT output
-        outputs = self.bert(utterances, attention_mask=attentions)
+        outputs = self.bert(utterances, attention_mask=attentions, token_type_ids=token_type_ids)
 
         sequence_output = outputs[0]
         pooled_output = outputs[1]  # [CLS]
