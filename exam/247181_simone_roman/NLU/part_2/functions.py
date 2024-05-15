@@ -61,14 +61,16 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 utterance = tokenizer.convert_ids_to_tokens(utt_ids)
                 
                 to_decode = seq[:length].tolist()
-                
                 ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
                 # print(ref_slots)
                 
                 tmp_seq = []
+                prova = []
                 for id_el, elem in enumerate(to_decode):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
+
                 hyp_slots.append(tmp_seq)
+                # print(hyp_slots)
 
     try:            
         results = evaluate(ref_slots, hyp_slots)

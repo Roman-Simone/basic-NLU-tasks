@@ -75,7 +75,6 @@ if __name__ == "__main__":
         losses_train.append(np.asarray(loss).mean())
         results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang, tokenizer)
         losses_dev.append(np.asarray(loss_dev).mean())
-        print(loss_dev)
         
         f1 = results_dev['total']['f']
         # For decreasing the patience you can also use the average between slot f1 and intent accuracy
