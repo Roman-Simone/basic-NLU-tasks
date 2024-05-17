@@ -9,8 +9,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from transformers import BertTokenizer
 
-
-
 if __name__ == "__main__":
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -27,7 +25,6 @@ if __name__ == "__main__":
     intents = set([line['intent'] for line in corpus])
 
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-
     lang = Lang(intents, slots, cutoff=0)
     print("CREATE LANG")
 
@@ -58,7 +55,7 @@ if __name__ == "__main__":
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
         
-    n_epochs = 50
+    n_epochs = 200
     patience = 3
     losses_train = []
     losses_dev = []
@@ -67,22 +64,23 @@ if __name__ == "__main__":
     for x in tqdm(range(1,n_epochs)):
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=clip)
-        # if x % 5 == 0: # We check the performance every 5 epochs
-        sampled_epochs.append(x)
-        losses_train.append(np.asarray(loss).mean())
-        results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang, tokenizer)
-        losses_dev.append(np.asarray(loss_dev).mean())
-        
-        f1 = results_dev['total']['f']
-        # For decreasing the patience you can also use the average between slot f1 and intent accuracy
-        if f1 > best_f1:
-            best_f1 = f1
-            # Here you should save the model
-            patience = 3
-        else:
-            patience -= 1
-        if patience <= 0: # Early stopping with patience
-            break # Not nice but it keeps the code clean
+        if x % 5 == 0: # We check the performance every 5 epochs
+            sampled_epochs.append(x)
+            losses_train.append(np.asarray(loss).mean())
+
+            results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang, tokenizer)
+            losses_dev.append(np.asarray(loss_dev).mean())
+            
+            f1 = results_dev['total']['f']
+            # For decreasing the patience you can also use the average between slot f1 and intent accuracy
+            if f1 > best_f1:
+                best_f1 = f1
+                # Here you should save the model
+                patience = 3
+            else:
+                patience -= 1
+            if patience <= 0: # Early stopping with patience
+                break # Not nice but it keeps the code clean
 
     results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, model, lang, tokenizer)    
     print('Slot F1: ', results_test['total']['f'])

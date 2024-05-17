@@ -9,7 +9,8 @@ import torch.utils.data as data
 PAD_TOKEN = 0
 CLS_TOKEN = 101
 SEP_TOKEN = 102
-device = torch.device("cuda" if torch.cuda.is_available() else "mps")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "mps")
+
 
 
 def load_data(path):
@@ -83,9 +84,6 @@ class IntentsAndSlots (data.Dataset):
             self.utterances.append("[CLS] " + x['utterance'] + " [SEP]")
             self.slots.append("O " + x['slots'] + " O")
             self.intents.append(x['intent'])
-
-        # self.utt_ids = self.mapping_seq(self.utterances, lang.word2id)
-        # self.slot_ids = self.mapping_seq(self.slots, lang.slot2id)
 
         self.utt_ids, self.slots_ids, self.attention_mask, self.token_type_id = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
         # self.check_len(self.utt_ids, self.slots_ids)
