@@ -61,16 +61,10 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 utterance = tokenizer.convert_ids_to_tokens(utt_ids)
 
                 gt_ids = sample['y_slots'][id_seq].tolist()
-                # print(gt_ids)
-                # print()
                 gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
+
                 pad_positions = [i for i, slot in enumerate(gt_slots) if slot == 'pad']
                 ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots) if elem != 'pad'])
-                # print(gt_slots)
-                # print(pad_positions)
-                # print(ref_slots)
-                # print()
-
                 # ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
                 
                 to_decode = seq[:length].tolist()  
@@ -78,7 +72,6 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 tmp_seq = []
                 for id_el, elem in enumerate(to_decode):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
-
                 # hyp_slots.append(tmp_seq)
                 hyp_slots.append([tmp_seq[id_el] for id_el, elem in enumerate(to_decode) if id_el not in pad_positions])
               
