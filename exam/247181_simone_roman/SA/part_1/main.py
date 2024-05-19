@@ -17,8 +17,9 @@ from torch.utils.data import DataLoader
 if __name__ == "__main__":
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    tmp_train_raw = load_data(os.path.join(current_dir, "dataset/twitter1_train.txt"))
-    test_raw = load_data(os.path.join(current_dir, "dataset/twitter1_test.txt"))
+    tmp_train_raw = load_data(os.path.join(current_dir, "dataset/laptop14_train.txt"))
+    test_raw = load_data(os.path.join(current_dir, "dataset/laptop14_test.txt"))
+    print(len(tmp_train_raw))
 
     #create the dev set
     train_raw, dev_raw = create_dev(tmp_train_raw)
