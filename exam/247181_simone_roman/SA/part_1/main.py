@@ -7,6 +7,9 @@ from utils import *
 from model import *
 
 import os
+import numpy as np
+from tqdm import tqdm
+import torch.optim as optim
 from transformers import BertTokenizer
 from torch.utils.data import DataLoader
 
@@ -48,3 +51,30 @@ if __name__ == "__main__":
     test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
 
 
+
+
+    hid_size = 768
+    emb_size = 300
+    lr = 0.0001 # learning rate
+    clip = 5 # Clip the gradient
+
+    out_slot = len(lang.slot2id)
+   
+
+    model = ModelBert(hid_size, out_slot).to(device)
+    
+    optimizer = optim.Adam(model.parameters(), lr=lr)
+    criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
+    criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
+
+        
+    n_epochs = 200
+    patience = 3
+    losses_train = []
+    losses_dev = []
+    sampled_epochs = []
+    best_f1 = 0
+    for x in tqdm(range(1,n_epochs)):
+        loss = train_loop(train_loader, optimizer, criterion_slots, 
+                        criterion_intents, model, clip=clip)
+        
