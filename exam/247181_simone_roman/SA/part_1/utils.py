@@ -23,30 +23,27 @@ def create_dev(tmp_train_raw):
 def split_data(data):
     data_ret = []
     for elem in data:
+
         split_utt_slot = elem.split('####')
         
+        tmp_slots = ""
+        for slot in split_utt_slot[1].split(' '):
+            value_slot = slot.split('=')
+            if value_slot[-1] != 'O':
+                tmp_slots += "T "
+            else:
+                tmp_slots += value_slot[-1] + " "
         
-        if len(split_utt_slot) == 2:
-            tmp_slots = ""
-            for slot in split_utt_slot[1].split(' '):
-                value_slot = slot.split('=')
-                if value_slot[-1] != 'O':
-                    tmp_slots += "T "
-                else:
-                    tmp_slots += value_slot[-1] + " "
-            
-            tmp_slots = tmp_slots[:len(tmp_slots)-1]
+        tmp_slots = tmp_slots[:len(tmp_slots)-1]
 
-            tmp_elem = {"utterance": split_utt_slot[0], "slots": tmp_slots}
-            # if(len(tmp_elem["utterance"].split(" ")) != len(tmp_elem["slots"].split(" "))):
-            #     print("Error in splitting")
-            #     print(tmp_elem)
-            #     print(split_utt_slot[0])
-            #     print(split_utt_slot[1])
-        else:
-            print("Error in splitting")
+        tmp_elem = {"utterance": split_utt_slot[0], "slots": tmp_slots}
+        # if(len(tmp_elem["utterance"].split(" ")) != len(tmp_elem["slots"].split(" "))):
+        #     print("Error in splitting")
+        #     print(tmp_elem)
+        #     print(split_utt_slot[0])
+        #     print(split_utt_slot[1])
 
-        
+
         data_ret.append(tmp_elem)
 
     return data_ret
@@ -120,6 +117,14 @@ class IntentsAndSlots (data.Dataset):
                 for i in range(len(word_tokens["input_ids"])-1):
                     tmp_attention.append(1)
                     tmp_token_type_id.append(0)
+            
+            # if(self.check_len(tmp_seq, tmp_slot)):
+            #     print("Error in mapping")
+
+            if(len(tmp_seq) != len(tmp_slot)):
+                print("Error in mapping")
+                print(tmp_seq)
+                print(tmp_slot)
 
             res_utterance.append(tmp_seq)
             res_slots.append(tmp_slot)

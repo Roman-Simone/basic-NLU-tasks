@@ -27,8 +27,6 @@ if __name__ == "__main__":
     train_raw_split = split_data(train_raw)
     dev_raw_split = split_data(dev_raw)
     test_raw_split = split_data(test_raw)
-
-    print(len(train_raw_split))
     
 
     corpus = train_raw_split + dev_raw_split + test_raw_split # We do not wat unk labels, 
@@ -37,7 +35,6 @@ if __name__ == "__main__":
         for elem in slot['slots'].split():
             slots.add(elem)
     
-    print(slots)
 
     
     print("CREATE LANG")
@@ -62,21 +59,23 @@ if __name__ == "__main__":
     out_slot = len(lang.slot2id)
 
     model = ModelBert(hid_size, out_slot).to(device)
+    model.apply(init_weights)
     
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
-    n_epochs = 200
+    n_epochs = 100
     patience = 3
     losses_train = []
     losses_dev = []
     sampled_epochs = []
     best_f1 = 0
-    for x in tqdm(range(1,n_epochs)):
+    pbar = tqdm(range(1,n_epochs))
+    for x in pbar:
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=clip)
-        
+        pbar.set_description(f"Loss: {np.asarray(loss).mean():.2f}")
         if x % 5 == 0: # We check the performance every 5 epochs
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
@@ -85,6 +84,7 @@ if __name__ == "__main__":
             losses_dev.append(np.asarray(loss_dev).mean())
             
             f1 = results_dev['total']['f']
+            print('Slot F1: ', f1)
             # For decreasing the patience you can also use the average between slot f1 and intent accuracy
             if f1 > best_f1:
                 best_f1 = f1

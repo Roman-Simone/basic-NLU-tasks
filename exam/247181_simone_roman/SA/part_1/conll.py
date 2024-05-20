@@ -3,14 +3,21 @@ import numpy as np
 
 SMALL_POSITIVE_CONST = 1e-4
 
-def evaluate_ote(gold_ot, pred_ot):
+def evaluate_ote(gold_ot, pred_ot, lang):
     """
     evaluate the model performce for the ote task
     :param gold_ot: gold standard ote tags
     :param pred_ot: predicted ote tags
     :return:
     """
-    assert len(gold_ot) == len(pred_ot)
+    id_pad = lang.slot2id['pad']
+    id_T = lang.slot2id['T']
+    id_O = lang.slot2id['O']
+    # print("ID PAD", id_pad)
+    # print("ID T", id_T)
+    # print("ID O", id_O)
+    # print(len(gold_ot), len(pred_ot))
+    # print(gold_ot, pred_ot)
     n_samples = len(gold_ot)
     # number of true positive, gold standard, predicted opinion targets
     n_tp_ot, n_gold_ot, n_pred_ot = 0, 0, 0
@@ -22,20 +29,20 @@ def evaluate_ote(gold_ot, pred_ot):
         # hit number
         # n_hit_ot = match_ot(gold_ote_sequence=g_ot_sequence, pred_ote_sequence=p_ot_sequence)
         n_hit_ot = 0
-        for ref, pred in zip(gold_ot, pred_ot):
-            if ref == pred:
+        for ref, pred in zip(g_ot, p_ot):
+            if ref == pred and ref == id_T:
                 n_hit_ot += 1
 
         n_tp_ot += n_hit_ot
-        n_gold_ot += len(gold_ot)
-        n_pred_ot += len(pred_ot)
+        n_gold_ot += sum([1 for ot in g_ot if ot == id_T])
+        n_pred_ot += sum([1 for ot in p_ot if ot == id_T])
     # add 0.001 for smoothing
     # calculate precision, recall and f1 for ote task
     ot_precision = float(n_tp_ot) / float(n_pred_ot + SMALL_POSITIVE_CONST)
     ot_recall = float(n_tp_ot) / float(n_gold_ot + SMALL_POSITIVE_CONST)
     ot_f1 = 2 * ot_precision * ot_recall / (ot_precision + ot_recall + SMALL_POSITIVE_CONST)
     ote_scores = (ot_precision, ot_recall, ot_f1)
-    return ote_scores
+    return ot_f1
 
 
 def evaluate_ts(gold_ts, pred_ts):
