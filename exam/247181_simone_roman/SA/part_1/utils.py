@@ -30,7 +30,10 @@ def split_data(data):
             tmp_slots = ""
             for slot in split_utt_slot[1].split(' '):
                 value_slot = slot.split('=')
-                tmp_slots += value_slot[-1] + " "
+                if value_slot[-1] != 'O':
+                    tmp_slots += "T "
+                else:
+                    tmp_slots += value_slot[-1] + " "
             
             tmp_slots = tmp_slots[:len(tmp_slots)-1]
 
@@ -43,8 +46,8 @@ def split_data(data):
         else:
             print("Error in splitting")
 
-        if(len(tmp_elem["utterance"].split(" ")) == len(tmp_elem["slots"].split(" "))):
-            data_ret.append(tmp_elem)
+        
+        data_ret.append(tmp_elem)
 
     return data_ret
 
@@ -115,7 +118,7 @@ class IntentsAndSlots (data.Dataset):
                 tmp_slot.extend([mapper_slot[element]] + [mapper_slot['pad']] * (len(word_tokens["input_ids"]) - 1))
 
                 for i in range(len(word_tokens["input_ids"])-1):
-                    tmp_attention.append(0)
+                    tmp_attention.append(1)
                     tmp_token_type_id.append(0)
 
             res_utterance.append(tmp_seq)
