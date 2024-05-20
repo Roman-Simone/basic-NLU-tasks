@@ -2,6 +2,7 @@
 # Here is where you define the architecture of your model using pytorch
 import torch
 from semeval_base import category_detection
+from conll import evaluate_ote
 
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
@@ -64,7 +65,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
               
 
     try:           
-        results = category_detection(length, ref_slots, hyp_slots)
+        results = evaluate_ote(length, gt_ids, to_decode)
     except Exception as ex:
         # Sometimes the model predicts a class that is not in REF
         print("Warning:", ex)

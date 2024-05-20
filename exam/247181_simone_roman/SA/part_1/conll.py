@@ -17,12 +17,18 @@ def evaluate_ote(gold_ot, pred_ot):
     for i in range(n_samples):
         g_ot = gold_ot[i]
         p_ot = pred_ot[i]
-        g_ot_sequence, p_ot_sequence = tag2ot(ote_tag_sequence=g_ot), tag2ot(ote_tag_sequence=p_ot)
+        #g_ot_sequence, p_ot_sequence = tag2ot(ote_tag_sequence=g_ot), tag2ot(ote_tag_sequence=p_ot)
+        
         # hit number
-        n_hit_ot = match_ot(gold_ote_sequence=g_ot_sequence, pred_ote_sequence=p_ot_sequence)
+        # n_hit_ot = match_ot(gold_ote_sequence=g_ot_sequence, pred_ote_sequence=p_ot_sequence)
+        n_hit_ot = 0
+        for ref, pred in zip(gold_ot, pred_ot):
+            if ref == pred:
+                n_hit_ot += 1
+
         n_tp_ot += n_hit_ot
-        n_gold_ot += len(g_ot_sequence)
-        n_pred_ot += len(p_ot_sequence)
+        n_gold_ot += len(gold_ot)
+        n_pred_ot += len(pred_ot)
     # add 0.001 for smoothing
     # calculate precision, recall and f1 for ote task
     ot_precision = float(n_tp_ot) / float(n_pred_ot + SMALL_POSITIVE_CONST)
