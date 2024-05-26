@@ -51,35 +51,33 @@ if __name__ == "__main__":
     dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
     test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)    
 
-
-    hid_size = 200
-    emb_size = 300
-    lr = 0.0001 # learning rate
-    clip = 5 # Clip the gradient
+    config = {
+        "lr": 0.0001,
+        "hid_size": 200,
+        "emb_size": 300,
+        "n_epochs": 200,
+        "runs": 5
+    }
 
 
     out_slot = len(lang.slot2id)
     out_int = len(lang.intent2id)
     vocab_len = len(lang.word2id)
 
-    model = ModelIAS(hid_size, out_slot, out_int, emb_size, vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
+    model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
     model.apply(init_weights)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=config["lr"])
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
-
-    n_epochs = 200
-    runs = 5
-
     slot_f1s, intent_acc = [], []
-    for x in tqdm(range(0, runs)):
-        model = ModelIAS(hid_size, out_slot, out_int, emb_size, 
+    for x in tqdm(range(0, config["runs"])):
+        model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], 
                         vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
         model.apply(init_weights)
 
-        optimizer = optim.Adam(model.parameters(), lr=lr)
+        optimizer = optim.Adam(model.parameters(), lr=config["lr"])
         criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
         criterion_intents = nn.CrossEntropyLoss()
         
@@ -89,7 +87,7 @@ if __name__ == "__main__":
         losses_dev = []
         sampled_epochs = []
         best_f1 = 0
-        for x in range(1,n_epochs):
+        for x in range(1, config["n_epochs"]):
             loss = train_loop(train_loader, optimizer, criterion_slots, 
                             criterion_intents, model)
             if x % 5 == 0:
@@ -117,3 +115,5 @@ if __name__ == "__main__":
     intent_acc = np.asarray(intent_acc)
     print('Slot F1', round(slot_f1s.mean(),3), '+-', round(slot_f1s.std(),3))
     print('Intent Acc', round(intent_acc.mean(), 3), '+-', round(slot_f1s.std(), 3))
+
+    

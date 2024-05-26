@@ -4,17 +4,13 @@
 # Global variables
 import os
 import torch
-from conll import evaluate
-from sklearn.metrics import classification_report
 import torch.nn as nn
+from conll import evaluate
+import matplotlib.pyplot as plt
+from sklearn.metrics import classification_report
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "mps")
-
-os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
-# os.environ['CUDA_LAUNCH_BLOCKING'] = "1" # Used to report errors on CUDA side
-
-
 
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
@@ -33,6 +29,7 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)  
         optimizer.step() # Update the weights
     return loss_array
+
 
 def eval_loop(data, criterion_slots, criterion_intents, model, lang):
     model.eval()
@@ -107,3 +104,42 @@ def init_weights(mat):
                 torch.nn.init.uniform_(m.weight, -0.01, 0.01)
                 if m.bias != None:
                     m.bias.data.fill_(0.01)
+
+
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model):
+    
+    # Create a folder
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(current_dir, "results")
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
+
+    title = f"{name_exercise}_test_{num_folders + 1}"
+    folder_path = os.path.join(folder_path, title)
+    os.makedirs(folder_path, exist_ok=True)
+
+    plt.figure()
+    plt.plot(sampled_epochs, losses_train, 'o-', label='Train')
+    plt.plot(sampled_epochs, losses_dev, 'o-', label='Dev')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.savefig(os.path.join(folder_path, "LOSS_TRAIN_vs_DEV.pdf"))
+
+    # Create a text file and save it in the folder_path with the training parameters
+    file_path = os.path.join(folder_path, "training_parameters.txt")
+    with open(file_path, "w") as file:
+        file.write(f"{name_exercise}\n\n")
+        file.write(f"lr: {config['lr']}\n")
+        file.write(f"clip: {config['clip']}\n")
+        file.write(f"n_epochs: {config['n_epochs']}\n")
+        file.write(f"hid_size: {config['hid_size']}\n")
+        file.write(f"Results:\n")
+        for key, value in results_test.items():
+            file.write(f"{key}: {value}\n")
+        
+
+    # To save the model
+    # torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))

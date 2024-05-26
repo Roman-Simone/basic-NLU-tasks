@@ -1,0 +1,10 @@
+SA 
+
+lr: 0.0001
+clip: 5
+n_epochs: 100
+hid_size: 768
+Results:
+Precision: 0.7245155244721546
+Recall: 0.827718880874025
+F1: 0.77263658787259

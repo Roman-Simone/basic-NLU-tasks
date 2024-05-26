@@ -174,10 +174,8 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config,
     file_path = os.path.join(folder_path, "training_parameters.txt")
     with open(file_path, "w") as file:
         file.write(f"{name_exercise}\n\n")
-        file.write(f"lr: {config['lr']}\n")
-        file.write(f"clip: {config['clip']}\n")
-        file.write(f"n_epochs: {config['n_epochs']}\n")
-        file.write(f"hid_size: {config['hid_size']}\n")
+        for key, value in config.items():
+            file.write(f"{key}: {value}\n")
         file.write(f"Results:\n")
         for key, value in results_test.items():
             file.write(f"{key}: {value}\n")
