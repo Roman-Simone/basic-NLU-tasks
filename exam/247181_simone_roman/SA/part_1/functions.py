@@ -58,6 +58,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 ref_slots.append(gt_ids)
                 
                 to_decode = seq.tolist()  
+                hyp_slots.append(to_decode)
                 
                 # print(to_decode)
                 # tmp_seq = []
