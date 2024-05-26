@@ -17,6 +17,10 @@ def create_dev(tmp_train_raw):
     dim_dev = 0.1
     dev_data = tmp_train_raw[:int(len(tmp_train_raw)*dim_dev)]
     train_data = tmp_train_raw[int(len(tmp_train_raw)*dim_dev):]
+
+    print(" tmp Train data: ", len(tmp_train_raw))
+    print(" Train data: ", len(train_data))
+    print(" Dev data: ", len(dev_data))
     return train_data, dev_data
 
 

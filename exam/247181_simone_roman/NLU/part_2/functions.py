@@ -74,7 +74,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
                 # hyp_slots.append(tmp_seq)
                 hyp_slots.append([tmp_seq[id_el] for id_el, elem in enumerate(to_decode) if id_el not in pad_positions])
-              
+                
 
 
     try:            
