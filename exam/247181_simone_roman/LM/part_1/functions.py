@@ -68,9 +68,8 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_train_list, 
-                ppl_dev_list, hid_size, emb_size, lr, clip, vocab_len, epoch,best_ppl, final_ppl, 
-                batch_size_train, batch_size_dev, batch_size_test, optimizer, model, best_model):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_train_list, ppl_dev_list, 
+                final_epoch, best_ppl, final_ppl, optimizer, model, best_model, config):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
@@ -101,17 +100,10 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev,ppl_trai
     file_path = os.path.join(folder_path, "training_parameters.txt")
     with open(file_path, "w") as file:
         file.write(f"{name_exercise}\n\n")
-        file.write(f"Hidden Size: {hid_size}\n")
-        file.write(f"Embedding Size: {emb_size}\n")
-        file.write(f"Learning Rate: {lr}\n")
-        file.write(f"Clip: {clip}\n")
-        file.write(f"Vocabulary Length: {vocab_len}\n")
-        file.write(f"Number of Epochs: {epoch}\n")
+        for key, value in config.items():
+            file.write(f"{key}: {value}\n")
         file.write(f"Best Dev PPL: {best_ppl}\n")
         file.write(f"Best Test PPL: {final_ppl}\n")
-        file.write(f"Batch Size Train: {batch_size_train}\n")
-        file.write(f"Batch Size Dev: {batch_size_dev}\n")
-        file.write(f"Batch Size Test: {batch_size_test}\n")
         file.write(f"Optimizer: {optimizer}\n")
         file.write(f"Model: {model}\n")
 
