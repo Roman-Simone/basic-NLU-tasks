@@ -5,27 +5,37 @@
 from functions import *
 from utils import *
 from model import *
-import os
-import copy
-from collections import deque
 
-def copy_model(model):
-    copied_model = type(model)(*model.init_parameters())
-    copied_model.load_state_dict(model.state_dict())
-    return copied_model
+from functools import partial
+from torch.utils.data import DataLoader
+import torch.optim as optim
+from tqdm import tqdm
+import copy
+import math
+import os
+
+
+def average_weights(weights_list):
+    avg_weights = copy.deepcopy(weights_list[0])
+    for key in avg_weights.keys():
+        for weights in weights_list[1:]:
+            avg_weights[key] += weights[key]
+        avg_weights[key] /= len(weights_list)
+    return avg_weights
+
 
 if __name__ == "__main__":
     
     #!PARAMETERS
 
     batch_size_train = 32
-    batch_size_dev = 64
-    batch_size_test = 64
+    batch_size_dev = 128
+    batch_size_test = 128
     
-    hid_size = 300
-    emb_size = 300
+    hid_size = 500
+    emb_size = 500
 
-    lr = 5 # This is definitely not good for SGD
+    lr = 2.5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
     
     #*###############################################################################################
@@ -74,11 +84,7 @@ if __name__ == "__main__":
     final_epoch = 0
     switch_ASGD = False
     window = 3
-
-    queue_weights = deque(maxlen=window)
-    sum_weights = {}
-    best_weights = {}
-    iteration_weight = 1
+    list_weights = []
    
 
     #If the PPL is too high try to change the learning rate
@@ -89,68 +95,89 @@ if __name__ == "__main__":
         sampled_epochs.append(epoch)
         losses_train.append(np.asarray(loss_train).mean())
 
+
+        #if switched in ASGD
         if switch_ASGD:
-            iteration_weight += 1
 
-            if len(queue_weights) == window:
-                queue_weights.popleft()
-                iteration_weight = window
-            
-            tmp = {}
+            # Save model weights
+            weights = {}
             for prm in model.parameters():
-                tmp[prm] = prm.data.clone()
-            
-            queue_weights.append(tmp)
-            sum_weights = {prm: torch.zeros_like(prm) for prm in model.parameters()}
+                weights[prm] = prm.data.clone()
+              
 
-            for elem in queue_weights:
+            if len(list_weights) < window:
+                list_weights.append(weights)
+            else:
+                list_weights.pop(0)
+                list_weights.append(weights)
+            
+            #media dei pesi
+
+            avg_weights = {}
+
+            if len(list_weights)==1:
                 for prm in model.parameters():
-                    sum_weights[prm] += elem[prm]
+                    avg_weights[prm] = prm.data.clone()
+            else:
+                for elem in list_weights:
+                    for key in elem.keys():
+                        if key not in avg_weights:
+                            avg_weights[key] = elem[key].clone()
+                        else:
+                            avg_weights[key] += elem[key]
+                for key in avg_weights.keys():
+                    avg_weights[key] /= len(list_weights)
 
-
+            
+             # Load average weights into the model
             for prm in model.parameters():
-                avg_weights[prm] = sum_weights[prm]/iteration_weight
-                prm.data = avg_weights[prm].data.clone()
-                
+                prm.data = avg_weights[prm].clone()
 
-        ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
-        ppl_dev_list.append(ppl_dev)
-        losses_dev.append(np.asarray(loss_dev).mean())
-        pbar.set_description(f"PPL: {ppl_dev} lr = {lr} , ASGD = {switch_ASGD}")
+            optimizer = optim.SGD(model.parameters(), lr=lr)
 
-        if switch_ASGD:
+            ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
+            ppl_dev_list.append(ppl_dev)
+            losses_dev.append(np.asarray(loss_dev).mean())
+            pbar.set_description(f"lr= {lr} ASGD= {switch_ASGD} PPL: {ppl_dev}")       
+
+            # Load model weights
             for prm in model.parameters():
-                # continue
-                prm.data = tmp[prm].clone()
-                # queue_weights[iteration_weight][prm] = tmp[prm].clone()
+                prm.data = weights[prm].clone()
+
+        else:
+
+
+            ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
+            ppl_dev_list.append(ppl_dev)
+            losses_dev.append(np.asarray(loss_dev).mean())
+            pbar.set_description(f"lr= {lr} ASGD= {switch_ASGD} PPL: {ppl_dev}")
+
+            if (len(ppl_dev_list) > window and ppl_dev > min(ppl_dev_list[:-window])):
+                # lr *= 4/10
+                # optimizer.param_groups[0]['lr'] = lr
+                optimizer = optim.SGD(best_weights, lr=lr)
+                print(epoch)
+                switch_ASGD = True
+            
+
+
+        best_weights = model.parameters()
 
         if  ppl_dev < best_ppl: # the lower, the better
             best_ppl = ppl_dev
             best_model = copy.deepcopy(model).to('cpu')
-            for prm in model.parameters():
-                best_weights[prm] = prm.data.clone()
-            patience = 3
-        elif ppl_dev > best_ppl and switch_ASGD:
+            best_weights = model.parameters()
+            patience = 5
+        elif ppl_dev > best_ppl and switch_ASGD==False:
+            lr *= 4/10
+            optimizer.param_groups[0]['lr'] = lr
+        elif ppl_dev > best_ppl and switch_ASGD==True:
+            lr *= 4/10
+            optimizer.param_groups[0]['lr'] = lr
             patience -= 1
 
-        if epoch % 5 == 0:
-            lr /= 2
-            # print('Learning rate changed to: ', lr)
-            optimizer.param_groups[0]['lr'] = lr
-
-        if patience <= 0 and switch_ASGD: # Early stopping with patience
+        if patience <= 0: # Early stopping with patience
             break # Not nice but it keeps the code clean
-
-        if switch_ASGD == False and (len(losses_dev)>window and loss_dev > min(losses_dev[:-window])):
-
-            # print('Switching to ASGD FIRST')
-            switch_ASGD = True            
-            sum_weights = best_weights
-            avg_weights = best_weights
-            queue_weights.append(best_weights)
-            for prm in model.parameters():
-                prm.data = best_weights[prm].clone()
-            # print()
 
 
     best_model.to(DEVICE)

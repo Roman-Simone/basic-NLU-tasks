@@ -14,23 +14,18 @@ import copy
 import math
 import os
 
-def copy_model(model):
-    copied_model = type(model)(*model.init_parameters())
-    copied_model.load_state_dict(model.state_dict())
-    return copied_model
-
 if __name__ == "__main__":
     
     #!PARAMETERS
 
-    batch_size_train = 20
-    batch_size_dev = 64
-    batch_size_test = 64
+    batch_size_train = 32
+    batch_size_dev = 128
+    batch_size_test = 128
     
     hid_size = 500
     emb_size = 500
 
-    lr = 10 # This is definitely not good for SGD
+    lr = 2.5 # This is definitely not good for SGD
     clip = 5 # Clip the gradient
     
     #*###############################################################################################
@@ -77,7 +72,6 @@ if __name__ == "__main__":
     best_model = None
     pbar = tqdm(range(1,n_epochs))
     final_epoch = 0
-    switch_ASGD = False
     window = 3
    
 
@@ -89,7 +83,10 @@ if __name__ == "__main__":
         sampled_epochs.append(epoch)
         losses_train.append(np.asarray(loss_train).mean())
 
+
+        #if switched in ASGD
         if 't0' in optimizer.param_groups[0]:
+
             tmp = {}
             for prm in model.parameters():
                 tmp[prm] = prm.data.clone()
@@ -99,7 +96,7 @@ if __name__ == "__main__":
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description("PPL: %f" % ppl_dev)
+            pbar.set_description(f"lr= {lr} ASGD= {'t0' in optimizer.param_groups[0]} PPL: {ppl_dev}")       
 
             for prm in model.parameters():
                 prm.data = tmp[prm].clone()
@@ -110,29 +107,32 @@ if __name__ == "__main__":
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description("PPL: %f" % ppl_dev)
+            pbar.set_description(f"lr= {lr} ASGD= {'t0' in optimizer.param_groups[0]} PPL: {ppl_dev}")
 
-            if len(losses_dev)>window and loss_dev > min(losses_dev[:-window]):
-                print('Switching to ASGD')
+            if len(ppl_dev_list) > window and ppl_dev > min(ppl_dev_list[:-window]):
+                lr *= 4/10
+                optimizer.param_groups[0]['lr'] = lr
+                print(epoch)
                 optimizer = torch.optim.ASGD(best_weights, lr=lr, t0=0, lambd=0., weight_decay=1.2e-06)
             
 
 
+        # best_weights = model.parameters()
 
         if  ppl_dev < best_ppl: # the lower, the better
             best_ppl = ppl_dev
             best_model = copy.deepcopy(model).to('cpu')
             best_weights = model.parameters()
             patience = 3
+        elif ppl_dev > best_ppl and 't0' not in optimizer.param_groups[0]:
+            lr *= 4/10
+            optimizer.param_groups[0]['lr'] = lr
         elif ppl_dev > best_ppl and 't0' in optimizer.param_groups[0]:
+            lr *= 4/10
+            optimizer.param_groups[0]['lr'] = lr
             patience -= 1
 
-        if epoch % 5 == 0:
-            lr /= 2
-            print('Learning rate changed to: ', lr)
-            optimizer.param_groups[0]['lr'] = lr
-
-        if patience <= 0 and switch_ASGD: # Early stopping with patience
+        if patience <= 0: # Early stopping with patience
             break # Not nice but it keeps the code clean
 
 

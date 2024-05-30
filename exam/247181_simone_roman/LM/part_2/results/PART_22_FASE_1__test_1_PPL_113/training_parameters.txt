@@ -1,0 +1,29 @@
+PART_22_FASE_1_
+
+Hidden Size: 500
+Embedding Size: 500
+Learning Rate: 0.06400000000000002
+Clip: 5
+Vocabulary Length: 10001
+Number of Epochs: 14
+Best Dev PPL: 115.08671891824646
+Best Test PPL: 113.35106005030846
+Batch Size Train: 32
+Batch Size Dev: 128
+Batch Size Test: 128
+Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    differentiable: False
+    foreach: None
+    lr: 0.06400000000000002
+    maximize: False
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+)
+Model: LM_LSTM(
+  (embedding): Embedding(10001, 500, padding_idx=0)
+  (lstm): LSTM(500, 500, batch_first=True)
+  (output): Linear(in_features=500, out_features=10001, bias=True)
+)

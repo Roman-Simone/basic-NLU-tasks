@@ -1,0 +1,32 @@
+PART_22
+
+Hidden Size: 500
+Embedding Size: 500
+Learning Rate: 0.0016384000000000008
+Clip: 5
+Vocabulary Length: 10001
+Number of Epochs: 69
+Best Dev PPL: 93.33564318073607
+Best Test PPL: 90.72319114876018
+Batch Size Train: 32
+Batch Size Dev: 128
+Batch Size Test: 128
+Optimizer: ASGD (
+Parameter Group 0
+    alpha: 0.75
+    capturable: False
+    differentiable: False
+    foreach: None
+    lambd: 0.0
+    lr: 0.0016384000000000008
+    maximize: False
+    t0: 0
+    weight_decay: 1.2e-06
+)
+Model: LM_LSTM_DROP(
+  (embedding): Embedding(10001, 500, padding_idx=0)
+  (emb_dropout): VariationalDropout()
+  (lstm): LSTM(500, 500, batch_first=True)
+  (output): Linear(in_features=500, out_features=10001, bias=True)
+  (out_dropout): VariationalDropout()
+)
