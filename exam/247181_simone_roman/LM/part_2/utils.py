@@ -1,10 +1,10 @@
-# Add functions or classes used for data loading and preprocessing
-# Loading the corpus
 import torch
 import torch.utils.data as data
-from functions import *
-from torch.utils.data import DataLoader
 
+# Device
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+# Dataset class
 class PennTreeBank (data.Dataset):
     # Mandatory methods are __init__, __len__ and __getitem__
     def __init__(self, corpus, lang):
@@ -44,6 +44,8 @@ class PennTreeBank (data.Dataset):
             res.append(tmp_seq)
         return res
 
+
+# Collate function to pad the sequences
 def collate_fn(data, pad_token):
     def merge(sequences):
         '''
@@ -75,6 +77,9 @@ def collate_fn(data, pad_token):
     new_item["target"] = target.to(DEVICE)
     new_item["number_tokens"] = sum(lengths)
     return new_item
+
+
+# Read the file and add the end of sentence token
 def read_file(path, eos_token="<eos>"):
     output = []
     with open(path, "r") as f:
@@ -82,7 +87,8 @@ def read_file(path, eos_token="<eos>"):
             output.append(line.strip() + " " + eos_token)
     return output
 
-# Vocab with tokens to ids
+
+# Get the vocabulary
 def get_vocab(corpus, special_tokens=[]):
     output = {}
     i = 0
@@ -97,7 +103,6 @@ def get_vocab(corpus, special_tokens=[]):
     return output
 
 
-# This class computes and stores our vocab
 # Word to ids and ids to word
 class Lang():
     def __init__(self, corpus, special_tokens=[]):

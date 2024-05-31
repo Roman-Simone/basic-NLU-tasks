@@ -1,11 +1,11 @@
-# Add functions or classes used for data loading and preprocessing
-# Loading the corpus
 import torch
 import torch.utils.data as data
-from functions import *
 
+# Device
+DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
+
+# Dataset class
 class PennTreeBank (data.Dataset):
-    # Mandatory methods are __init__, __len__ and __getitem__
     def __init__(self, corpus, lang):
         self.source = []
         self.target = []
@@ -13,7 +13,6 @@ class PennTreeBank (data.Dataset):
         for sentence in corpus:
             self.source.append(sentence.split()[0:-1]) # We get from the first token till the second-last token
             self.target.append(sentence.split()[1:]) # We get from the second token till the last token
-            # See example in section 6.2
 
         self.source_ids = self.mapping_seq(self.source, lang)
         self.target_ids = self.mapping_seq(self.target, lang)
@@ -26,8 +25,6 @@ class PennTreeBank (data.Dataset):
         trg = torch.LongTensor(self.target_ids[idx])
         sample = {'source': src, 'target': trg}
         return sample
-
-    # Auxiliary methods
 
     def mapping_seq(self, data, lang): # Map sequences of tokens to corresponding computed in Lang class
         res = []
@@ -42,6 +39,9 @@ class PennTreeBank (data.Dataset):
                     break
             res.append(tmp_seq)
         return res
+    
+
+# Read the file and add the end of sentence token
 def read_file(path, eos_token="<eos>"):
     output = []
     with open(path, "r") as f:
@@ -50,6 +50,7 @@ def read_file(path, eos_token="<eos>"):
     return output
 
 
+# Collate function to pad the sequences
 def collate_fn(data, pad_token):
     def merge(sequences):
         '''
@@ -82,6 +83,7 @@ def collate_fn(data, pad_token):
     new_item["number_tokens"] = sum(lengths)
     return new_item
 
+
 # Vocab with tokens to ids
 def get_vocab(corpus, special_tokens=[]):
     output = {}
@@ -97,7 +99,6 @@ def get_vocab(corpus, special_tokens=[]):
     return output
 
 
-# This class computes and stores our vocab
 # Word to ids and ids to word
 class Lang():
     def __init__(self, corpus, special_tokens=[]):
@@ -116,6 +117,3 @@ class Lang():
                     i += 1
         return output
     
-
-
-

@@ -1,12 +1,9 @@
-# Add the class of your model only
-# Here is where you define the architecture of your model using pytorch
-import torch
-import matplotlib.pyplot as plt
-import torch.nn as nn
-import math
 import os
+import math
+import torch
+import torch.nn as nn
+import matplotlib.pyplot as plt
 
-DEVICE = 'cuda:0' # it can be changed with 'cpu' if you do not have a gpu
 
 def train_loop(data, optimizer, criterion, model, clip=5):
     model.train()
@@ -24,11 +21,11 @@ def train_loop(data, optimizer, criterion, model, clip=5):
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step() # Update the weights
 
-
     loss_to_return = sum(loss_array) / sum(number_of_tokens)
     ppl = math.exp(sum(loss_array) / sum(number_of_tokens))
 
     return ppl, loss_to_return
+
 
 def eval_loop(data, eval_criterion, model):
     model.eval()
@@ -46,6 +43,7 @@ def eval_loop(data, eval_criterion, model):
     ppl = math.exp(sum(loss_array) / sum(number_of_tokens))
     loss_to_return = sum(loss_array) / sum(number_of_tokens)
     return ppl, loss_to_return
+
 
 def init_weights(mat):
     for m in mat.modules():
@@ -81,16 +79,16 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_tra
     os.makedirs(folder_path, exist_ok=True)
 
     plt.figure()
-    plt.plot(sampled_epochs, losses_train, 'o-', label='Train')
-    plt.plot(sampled_epochs, losses_dev, 'o-', label='Dev')
+    plt.plot(sampled_epochs, losses_train, '-', label='Train')
+    plt.plot(sampled_epochs, losses_dev, '-', label='Dev')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(os.path.join(folder_path, "LOSS_TRAIN_vs_DEV.pdf"))
 
     plt.figure()
-    plt.plot(sampled_epochs, ppl_train_list, 'o-', label='Train')
-    plt.plot(sampled_epochs, ppl_dev_list, 'o-', label='Dev')
+    plt.plot(sampled_epochs, ppl_train_list, '-', label='Train')
+    plt.plot(sampled_epochs, ppl_dev_list, '-', label='Dev')
     plt.xlabel('Epochs')
     plt.ylabel('PPL')
     plt.legend()
