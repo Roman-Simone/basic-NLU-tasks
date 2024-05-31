@@ -1,0 +1,31 @@
+PART_22_MANUAL
+
+batch_size_train: 32
+batch_size_dev: 128
+batch_size_test: 128
+hid_size: 500
+emb_size: 500
+lr: 0.00010485760000000006
+clip: 5
+n_epochs: 100
+patience: 5
+Best Dev PPL: 92.32490563959522
+Best Test PPL: 90.0406703150615
+Optimizer: SGD (
+Parameter Group 0
+    dampening: 0
+    differentiable: False
+    foreach: None
+    lr: 0.00010485760000000006
+    maximize: False
+    momentum: 0
+    nesterov: False
+    weight_decay: 0
+)
+Model: LM_LSTM_DROP(
+  (embedding): Embedding(10001, 500, padding_idx=0)
+  (emb_dropout): VariationalDropout()
+  (lstm): LSTM(500, 500, batch_first=True)
+  (output): Linear(in_features=500, out_features=10001, bias=True)
+  (out_dropout): VariationalDropout()
+)
