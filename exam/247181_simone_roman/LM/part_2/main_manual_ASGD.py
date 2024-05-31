@@ -105,7 +105,7 @@ if __name__ == "__main__":
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description(f"lr= {config["lr"]} ASGD= {switch_ASGD} PPL: {ppl_dev}")       
+            pbar.set_description(f"lr= {config['lr']} ASGD= {switch_ASGD} PPL: {ppl_dev}")       
 
             # Load model weights
             for prm in model.parameters():
@@ -117,7 +117,7 @@ if __name__ == "__main__":
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
-            pbar.set_description(f"lr= {config["lr"]} ASGD= {switch_ASGD} PPL: {ppl_dev}")
+            pbar.set_description(f"lr= {config['lr']} ASGD= {switch_ASGD} PPL: {ppl_dev}")
 
             if (len(losses_dev) > window and loss_dev > min(losses_dev[:-window])):
                 # lr *= 4/10
@@ -160,6 +160,6 @@ if __name__ == "__main__":
     final_ppl,  _ = eval_loop(test_loader, criterion_eval, best_model)
     print('Test ppl: ', final_ppl)
 
-    name_exercise = "PART_22"
+    name_exercise = "PART_22_MANUAL"
     save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_train_list, ppl_dev_list, 
                 final_epoch, best_ppl, final_ppl, optimizer, model, best_model, config)
