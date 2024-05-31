@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     for epoch in pbar:
         final_epoch = epoch
-        ppl_train, loss_train = train_loop(train_loader, optimizer, criterion_train, model, clip)
+        ppl_train, loss_train = train_loop(train_loader, optimizer, criterion_train, model, config["clip"])
         ppl_train_list.append(ppl_train)
         sampled_epochs.append(epoch)
         losses_train.append(np.asarray(loss_train).mean())
