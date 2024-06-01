@@ -100,15 +100,14 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_train_list, ppl_dev_list, 
-                final_epoch, best_ppl, final_ppl, optimizer, model, best_model, config):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
-    title = f"{name_exercise}_test_{num_folders + 1}_PPL_{int(final_ppl)}"
+    title = f"{name_exercise}_test_{num_folders + 1}_f1_{round(test_f1*100,2)}"
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -120,24 +119,16 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_tra
     plt.legend()
     plt.savefig(os.path.join(folder_path, "LOSS_TRAIN_vs_DEV.pdf"))
 
-    plt.figure()
-    plt.plot(sampled_epochs, ppl_train_list, '-', label='Train')
-    plt.plot(sampled_epochs, ppl_dev_list, '-', label='Dev')
-    plt.xlabel('Epochs')
-    plt.ylabel('PPL')
-    plt.legend()
-    plt.savefig(os.path.join(folder_path, "PPL_TRAIN_vs_DEV.pdf"))
 
     # Create a text file and save it in the folder_path with the training parameters
     file_path = os.path.join(folder_path, "training_parameters.txt")
     with open(file_path, "w") as file:
         file.write(f"{name_exercise}\n\n")
+        file.write(f"F1: {test_f1}\n")
         for key, value in config.items():
             file.write(f"{key}: {value}\n")
-        file.write(f"Best Dev PPL: {best_ppl}\n")
-        file.write(f"Best Test PPL: {final_ppl}\n")
         file.write(f"Optimizer: {optimizer}\n")
         file.write(f"Model: {model}\n")
 
     # To save the model
-    torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
+    # torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))

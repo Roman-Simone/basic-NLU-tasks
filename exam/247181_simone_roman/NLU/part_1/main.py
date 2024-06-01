@@ -97,8 +97,12 @@ if __name__ == "__main__":
 
         results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, 
                                                 criterion_intents, model, lang)
+        test_f1 = results_test['total']['f']
         intent_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
+
+        name_exercise = "PART_11"
+        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1)
 
 
     slot_f1s = np.asarray(slot_f1s)
