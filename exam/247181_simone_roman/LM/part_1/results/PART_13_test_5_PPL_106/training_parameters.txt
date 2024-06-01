@@ -1,0 +1,33 @@
+PART_13
+
+batch_size_train: 32
+batch_size_dev: 128
+batch_size_test: 128
+hid_size: 400
+emb_size: 400
+lr: 0.001
+clip: 5
+n_epochs: 100
+patience: 3
+Best Dev PPL: 118.51486328870956
+Best Test PPL: 106.24867036176518
+Optimizer: AdamW (
+Parameter Group 0
+    amsgrad: False
+    betas: (0.9, 0.999)
+    capturable: False
+    differentiable: False
+    eps: 1e-08
+    foreach: None
+    fused: None
+    lr: 0.001
+    maximize: False
+    weight_decay: 0.01
+)
+Model: LM_LSTM_DROP(
+  (embedding): Embedding(10001, 400, padding_idx=0)
+  (emb_dropout): Dropout(p=0.6, inplace=False)
+  (lstm): LSTM(400, 400, batch_first=True)
+  (dropout): Dropout(p=0.6, inplace=False)
+  (output): Linear(in_features=400, out_features=10001, bias=True)
+)

@@ -19,7 +19,7 @@ if __name__ == "__main__":
         "batch_size_test": 128,
         "hid_size": 400,
         "emb_size": 400,
-        "lr": 0.0001 ,
+        "lr": 0.001 ,
         "clip": 5,
         "n_epochs": 100,
         "patience": 3
