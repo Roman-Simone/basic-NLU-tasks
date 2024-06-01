@@ -1,15 +1,14 @@
-# Add functions or classes used for data loading and preprocessing
-
 import json
-from pprint import pprint
-from collections import Counter
 import torch
 import torch.utils.data as data
-from torch.utils.data import DataLoader
-from functions import *
+from collections import Counter
 from sklearn.model_selection import train_test_split
 
+#   We define the device to be used
+device = torch.device("cuda" if torch.cuda.is_available() else "mps")
 PAD_TOKEN = 0
+
+
 def load_data(path):
     '''
         input: path/to/data
@@ -19,6 +18,7 @@ def load_data(path):
     with open(path) as f:
         dataset = json.loads(f.read())
     return dataset
+
 
 def create_dev(tmp_train_raw):
     # First we get the 10% of the training set, then we compute the percentage of these examples 
@@ -46,7 +46,6 @@ def create_dev(tmp_train_raw):
     dev_raw = X_dev
 
     return train_raw, dev_raw
-
 
 
 class Lang():
@@ -120,8 +119,6 @@ class IntentsAndSlots (data.Dataset):
                     tmp_seq.append(mapper[self.unk])
             res.append(tmp_seq)
         return res
-
-
 
 
 def collate_fn(data):

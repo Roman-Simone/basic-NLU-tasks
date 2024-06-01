@@ -1,7 +1,3 @@
-# Add the class of your model only
-# Here is where you define the architecture of your model using pytorch
-
-# Global variables
 import os
 import torch
 import torch.nn as nn
@@ -9,8 +5,6 @@ from conll import evaluate
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "mps")
 
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
@@ -106,40 +100,44 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model):
-    
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_train_list, ppl_dev_list, 
+                final_epoch, best_ppl, final_ppl, optimizer, model, best_model, config):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
-
-    title = f"{name_exercise}_test_{num_folders + 1}"
+    title = f"{name_exercise}_test_{num_folders + 1}_PPL_{int(final_ppl)}"
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
     plt.figure()
-    plt.plot(sampled_epochs, losses_train, 'o-', label='Train')
-    plt.plot(sampled_epochs, losses_dev, 'o-', label='Dev')
+    plt.plot(sampled_epochs, losses_train, '-', label='Train')
+    plt.plot(sampled_epochs, losses_dev, '-', label='Dev')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.legend()
     plt.savefig(os.path.join(folder_path, "LOSS_TRAIN_vs_DEV.pdf"))
 
+    plt.figure()
+    plt.plot(sampled_epochs, ppl_train_list, '-', label='Train')
+    plt.plot(sampled_epochs, ppl_dev_list, '-', label='Dev')
+    plt.xlabel('Epochs')
+    plt.ylabel('PPL')
+    plt.legend()
+    plt.savefig(os.path.join(folder_path, "PPL_TRAIN_vs_DEV.pdf"))
+
     # Create a text file and save it in the folder_path with the training parameters
     file_path = os.path.join(folder_path, "training_parameters.txt")
     with open(file_path, "w") as file:
         file.write(f"{name_exercise}\n\n")
-        file.write(f"lr: {config['lr']}\n")
-        file.write(f"clip: {config['clip']}\n")
-        file.write(f"n_epochs: {config['n_epochs']}\n")
-        file.write(f"hid_size: {config['hid_size']}\n")
-        file.write(f"Results:\n")
-        for key, value in results_test.items():
+        for key, value in config.items():
             file.write(f"{key}: {value}\n")
-        
+        file.write(f"Best Dev PPL: {best_ppl}\n")
+        file.write(f"Best Test PPL: {final_ppl}\n")
+        file.write(f"Optimizer: {optimizer}\n")
+        file.write(f"Model: {model}\n")
 
     # To save the model
-    # torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
+    torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))

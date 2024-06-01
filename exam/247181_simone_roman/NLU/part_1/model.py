@@ -21,8 +21,7 @@ class ModelIAS(nn.Module):
         self.slot_out = nn.Linear(hid_size, out_slot)
         self.intent_out = nn.Linear(hid_size, out_int)
 
-        # Dropout layer How/Where do we apply it?
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0.5)
         
     def forward(self, utterance, seq_lengths):
         # utterance.size() = batch_size X seq_len
@@ -47,10 +46,6 @@ class ModelIAS(nn.Module):
             last_hidden = torch.cat((last_hidden[0], last_hidden[1]), dim=1)
         else:
             last_hidden = last_hidden[-1,:,:]
-        
-        
-        # Is this another possible way to get the last hiddent state? (Why?)
-        # utt_encoded.permute(1,0,2)[-1]
         
         # Compute slot logits
         slots = self.slot_out(utt_encoded)

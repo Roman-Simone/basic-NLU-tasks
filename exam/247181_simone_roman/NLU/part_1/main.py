@@ -1,27 +1,29 @@
-# This file is used to run your functions and print the results
-# Please write your fuctions or classes in the functions.py
-
-# Import everything from functions.py file
-from functions import *
 from utils import *
 from model import *
+from functions import *
+
 import os
 import numpy as np
-
-from collections import Counter
-import torch.optim as optim
-import matplotlib.pyplot as plt
 from tqdm import tqdm
-from transformers import BertTokenizer, BertModel
-from pprint import pprint
+import torch.optim as optim
+from torch.utils.data import DataLoader
 
 
 if __name__ == "__main__":
 
+    # PARAMETERS
+    config = {
+        "lr": 0.0001,
+        "batch_train_size": 128,
+        "batch_dev_size": 64,
+        "batch_test_size": 64,
+        "hid_size": 200,
+        "emb_size": 300,
+        "n_epochs": 200,
+        "runs": 5,
+    }
+
     # Load the data
-    # exampleod element -> {'utterance': 'what is the cost for these flights from baltimore to philadelphia', 
-    #                       'slots': 'O O O O O O O O B-fromloc.city_name O B-toloc.city_name', 
-    #                       'intent': 'airfare'}
     current_dir = os.path.dirname(os.path.abspath(__file__))
     tmp_train_raw = load_data(os.path.join(current_dir, "dataset/ATIS/train.json"))  
     test_raw = load_data(os.path.join(current_dir, "dataset/ATIS/test.json"))
@@ -30,35 +32,24 @@ if __name__ == "__main__":
     train_raw, dev_raw = create_dev(tmp_train_raw)
 
     # All the words in the train
-    words = sum([x['utterance'].split() for x in train_raw], []) # No set() since we want to compute All dataset
-    corpus = train_raw + dev_raw + test_raw # We do not wat unk labels, 
+    words = sum([x['utterance'].split() for x in train_raw], [])
+
+    corpus = train_raw + dev_raw + test_raw
     slots = set(sum([line['slots'].split() for line in corpus],[]))
     intents = set([line['intent'] for line in corpus])
 
-    # Create an id for each word, intent and slot ex -> {0: 'pad', 1: 'unk', 2: 'what', 3: 'is', 4: 'the', 5: 'cost', 6: 'for'...}
+    # Create an id for each word, intent and slot
     lang = Lang(words, intents, slots, cutoff=0)
 
     # Create our datasets
-    #Create the tensoer ecc ex->{'utterance': tensor([ 2.,  3.,  4., 35., 22.,  9., 36., 11., 37., 38., 24., 39.]), 
-    #                            'slots': tensor([ 20.,  20.,  20.,  86.,  20.,  20.,  87.,  20., 118.,  37.,  20., 127.]), 
-    #                            'intent': 17}
     train_dataset = IntentsAndSlots(train_raw, lang)
     dev_dataset = IntentsAndSlots(dev_raw, lang)
     test_dataset = IntentsAndSlots(test_raw, lang)
 
     # Dataloader instantiations
-    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
-    dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)    
-
-    config = {
-        "lr": 0.0001,
-        "hid_size": 200,
-        "emb_size": 300,
-        "n_epochs": 200,
-        "runs": 5
-    }
-
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_test_size"], collate_fn=collate_fn,  shuffle=True)
+    dev_loader = DataLoader(dev_dataset, batch_size=config["batch_dev_size"], collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=config["batch_test_size"], collate_fn=collate_fn)    
 
     out_slot = len(lang.slot2id)
     out_int = len(lang.intent2id)
@@ -81,7 +72,6 @@ if __name__ == "__main__":
         criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
         criterion_intents = nn.CrossEntropyLoss()
         
-
         patience = 3
         losses_train = []
         losses_dev = []
