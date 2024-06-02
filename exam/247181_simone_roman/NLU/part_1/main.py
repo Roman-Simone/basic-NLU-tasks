@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # PARAMETERS
     config = {
-        "lr": 5e-5,
+        "lr": 5e-10,
         "batch_train_size": 32,
         "batch_dev_size": 64,
         "batch_test_size": 64,
@@ -21,8 +21,8 @@ if __name__ == "__main__":
         "emb_size": 400,
         "n_epochs": 200,
         "runs": 1,
-        "flag_bidirectional": True,
-        "flag_dropout": True,
+        "flag_bidirectional": False,
+        "flag_dropout": False,
     }
 
     # Load the data
