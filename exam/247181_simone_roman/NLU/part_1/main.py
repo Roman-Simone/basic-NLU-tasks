@@ -20,9 +20,9 @@ if __name__ == "__main__":
         "hid_size": 300,
         "emb_size": 400,
         "n_epochs": 200,
-        "runs": 5,
-        "flag_bidirectional": False,
-        "flag_dropout": False,
+        "runs": 1,
+        "flag_bidirectional": True,
+        "flag_dropout": True,
     }
 
     # Load the data
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
-    slot_f1s, intent_acc = [], []
+    slot_f1s, intents_acc = [], []
     for x in tqdm(range(0, config["runs"])):
         model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], vocab_len, 
                          pad_index=PAD_TOKEN, flag_bidirectional=config["flag_bidirectional"], flag_dropout=config["flag_dropout"]).to(device)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
                                                 criterion_intents, model, lang)
         test_f1 = results_test['total']['f']
         test_acc = intent_test['accuracy']
-        intent_acc.append(intent_test['accuracy'])
+        intents_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
         name_exercise = "PART_11"
@@ -116,8 +116,8 @@ if __name__ == "__main__":
 
 
     slot_f1s = np.asarray(slot_f1s)
-    intent_acc = np.asarray(intent_acc)
+    intents_acc = np.asarray(intents_acc)
     print('Slot F1', round(slot_f1s.mean(),3), '+-', round(slot_f1s.std(),3))
-    print('Intent Acc', round(intent_acc.mean(), 3), '+-', round(slot_f1s.std(), 3))
+    print('Intent Acc', round(intents_acc.mean(), 3), '+-', round(slot_f1s.std(), 3))
 
     
