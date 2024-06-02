@@ -1,12 +1,8 @@
-# This file is used to run your functions and print the results
-# Please write your fuctions or classes in the functions.py
-
-# Import everything from functions.py file
 from functions import *
 from utils import *
 from model import *
 
-import os
+
 import copy
 import numpy as np
 from tqdm import tqdm
@@ -16,6 +12,17 @@ from torch.utils.data import DataLoader
 
 
 if __name__ == "__main__":
+    config={
+        "lr": 0.0001,
+        "batch_train_size": 128,
+        "batch_dev_size": 128,
+        "batch_test_size": 128,
+        "clip": 5, # Clip the gradient
+        "n_epochs": 100,
+        "hid_size": 768,
+    }
+
+
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     tmp_train_raw = load_data(os.path.join(current_dir, "dataset/laptop14_train.txt"))
@@ -28,13 +35,12 @@ if __name__ == "__main__":
     train_raw_split = split_data(train_raw)
     dev_raw_split = split_data(dev_raw)
     test_raw_split = split_data(test_raw)
+
     
 
     corpus = train_raw_split + dev_raw_split + test_raw_split # We do not wat unk labels, 
-    slots = set()
-    for slot in corpus:
-        for elem in slot['slots'].split():
-            slots.add(elem)
+
+    slots = set(sum([line['slots'].split() for line in corpus],[]))
     
 
     
@@ -46,24 +52,22 @@ if __name__ == "__main__":
     train_dataset = IntentsAndSlots(train_raw_split, lang, tokenizer)
     dev_dataset = IntentsAndSlots(dev_raw_split, lang, tokenizer)
     test_dataset = IntentsAndSlots(test_raw_split, lang, tokenizer)
+
+   
     
     print("CREATE DATALOADERS")
-    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
-    dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_train_size"], collate_fn=collate_fn,  shuffle=True)
+    dev_loader = DataLoader(dev_dataset, batch_size=config["batch_dev_size"], collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=config["batch_test_size"], collate_fn=collate_fn)
 
-    config={
-        "lr": 0.0001,
-        "clip": 5, # Clip the gradient
-        "n_epochs": 100,
-        "hid_size": 768,
-    }
+    
 
     patience= 3
     
     out_slot = len(lang.slot2id)
+
     model = ModelBert(config["hid_size"], out_slot).to(device)
-    model.apply(init_weights)
+    # model.apply(init_weights)
     
     optimizer = optim.Adam(model.parameters(), lr=config['lr'])
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
@@ -75,12 +79,13 @@ if __name__ == "__main__":
     sampled_epochs = []
     results_dev = []
     best_f1 = 0
+
     pbar = tqdm(range(1, config["n_epochs"]))
     for x in pbar:
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=config["clip"])
 
-        if x % 2 == 0: # We check the performance every 5 epochs
+        if x % 1 == 0: # We check the performance every 5 epochs
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
 
@@ -111,7 +116,7 @@ if __name__ == "__main__":
     
     print(f"Precision {precision:.2f}, Recall {recall:.2f}, F1 {f1:.2f}")
 
-    name_exercise = "SA "
+    name_exercise = "SA"
     save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model)
 
 

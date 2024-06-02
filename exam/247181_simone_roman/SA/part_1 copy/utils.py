@@ -1,4 +1,3 @@
-# Add functions or classes used for data loading and preprocessing
 import torch
 import torch.utils.data as data
 from sklearn.model_selection import train_test_split
@@ -25,30 +24,28 @@ def create_dev(tmp_train_raw):
 
 def split_data(data):
     data_ret = []
+
     for elem in data:
 
         split_utt_slot = elem.split('####')
-        tmp_sentence = ""
-        tmp_slots = ""
-        for element in split_utt_slot[1].split(' '):
+        tmp_sentence = []
+        tmp_slots = []
 
-            split_element = element.split('=')
-            value_slot = split_element[-1]
-            value_word = ""
-            for elem in split_element[:len(split_element)-1]:
-                value_word += elem + "="
+        for element in split_utt_slot[1].split(" "):
+            
+            split_element = element.rsplit('=', 1)
 
-            value_word = value_word[:len(value_word)-1]
+            tmp_sentence.append(split_element[0])
 
-            tmp_sentence += value_word + " "
-
-            if value_slot[-1] != 'O':
-                tmp_slots += "T "
+            if split_element[1] == "O":
+                tmp_slots.append('O')
+            elif split_element[1][0] == 'T':
+                tmp_slots.append('T')
             else:
-                tmp_slots += value_slot[-1] + " "
+                print("error")
         
-        tmp_slots = tmp_slots[:len(tmp_slots)-1]
-        tmp_sentence = tmp_sentence[:len(tmp_sentence)-1]
+        tmp_sentence = " ".join(tmp_sentence)
+        tmp_slots = " ".join(tmp_slots)
 
         tmp_elem = {"utterance": tmp_sentence, "slots": tmp_slots}
         data_ret.append(tmp_elem)
@@ -80,7 +77,7 @@ class IntentsAndSlots (data.Dataset):
         
         for x in dataset:
             self.utterances.append("[CLS] " + x['utterance'] + " [SEP]")
-            self.slots.append("O " + x['slots'] + " O")
+            self.slots.append("pad " + x['slots'] + " pad")
 
         self.utt_ids, self.slots_ids, self.attention_mask, self.token_type_id = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
         # self.check_len(self.utt_ids, self.slots_ids)
@@ -90,10 +87,10 @@ class IntentsAndSlots (data.Dataset):
 
     def __getitem__(self, idx):
         utt = torch.Tensor(self.utt_ids[idx])
-        slots = torch.Tensor(self.slots_ids[idx])
+        slotss = torch.Tensor(self.slots_ids[idx])
         attention = torch.Tensor(self.attention_mask[idx])
         token_type_id = torch.Tensor(self.token_type_id[idx])
-        sample = {'utterance': utt, 'slots': slots, 'attention': attention, 'token_type_id': token_type_id}
+        sample = {'utterance': utt, 'slots': slotss, 'attention': attention, 'token_type_id': token_type_id}
         return sample
     
     # Auxiliary methods
@@ -110,7 +107,7 @@ class IntentsAndSlots (data.Dataset):
             tmp_attention = []
             tmp_token_type_id = []
 
-            for word, element in zip(sequence.split(), slot.split(' ')):
+            for word, element in zip(sequence.split(' '), slot.split(' ')):
                 tmp_attention.append(1)
                 tmp_token_type_id.append(0)
 
@@ -124,9 +121,10 @@ class IntentsAndSlots (data.Dataset):
                 for i in range(len(word_tokens["input_ids"])-1):
                     tmp_attention.append(1)
                     tmp_token_type_id.append(0)
+
             
-            # if(self.check_len(tmp_seq, tmp_slot)):
-            #     print("Error in mapping")
+
+            # print(f"{len(tmp_seq)} - {len(tmp_slot)}")
 
             if(len(tmp_seq) != len(tmp_slot)):
                 print("Error in mapping")

@@ -49,37 +49,60 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 # length = sample['slots_len'].tolist()[id_seq]
 
                 # utt_ids = sample['utterance'][id_seq].tolist()
-                # utterance = tokenizer.convert_ids_to_tokens(utt_ids)
+                #utterance = tokenizer.convert_ids_to_tokens(utt_ids)
 
                 gt_ids = sample['y_slots'][id_seq].tolist()
+                # print(len(gt_ids))
+
+
+                id_pad = lang.slot2id['pad']
+                id_T = lang.slot2id['T']
+                id_O = lang.slot2id['O']
+    
+
                 # gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
 
-                # pad_positions = [i for i, slot in enumerate(gt_slots) if slot == 'pad']
+                # pad_positions = [i for i, slot in enumerate(gt_ids) if slot == id_pad]
+               
+
                 # ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots) if elem != 'pad'])
                 # ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
-                ref_slots.append(gt_ids)
+                # ref_slots.append(gt_ids)
+                gt_ids_no_pad = []
+                pos_pad = []
+
+                for id, elem in enumerate(gt_ids):
+                    if elem != id_pad:
+                        gt_ids_no_pad.append(elem)
+                    else:
+                        pos_pad.append(id)
+
+                ref_slots.append(gt_ids_no_pad)
+                # print(len(gt_ids_no_pad))
                 
                 to_decode = seq.tolist()  
-                hyp_slots.append(to_decode)
+                # hyp_slots.append(to_decode)
+
+                to_decode_no_pad = []
+                for id, _ in enumerate(to_decode):
+                    if id not in pos_pad:
+                        to_decode_no_pad.append(to_decode[id])
+
+                print(f"{len(gt_ids_no_pad)} - {len(to_decode_no_pad)}")
+
+                hyp_slots.append(to_decode_no_pad)
+
+                # print([elem for id_el, elem in enumerate(to_decode) if id_el != pad_positions])
+
+                if (len(ref_slots) != len(hyp_slots)):
+                    print("cazzo")
                 
-                # print(to_decode)
-                # tmp_seq = []
-                # for id_el, elem in enumerate(to_decode):
-                    # tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
-                # hyp_slots.append(tmp_seq)
-                # hyp_slots.append([tmp_seq[id_el] for id_el, elem in enumerate(to_decode) if id_el not in pad_positions])
-                # print("sium")
-                # print(gt_ids, to_decode)
-                # print(len(gt_ids), len(to_decode))
-                # gt_slots = [lang.id2slot[elem] for elem in gt_ids]
-                # hyp_slots = [lang.id2slot[elem] for elem in to_decode]
-                # print(gt_slots, hyp_slots)
-                # print()
               
 
     try:           
         results = evaluate_ote(ref_slots, hyp_slots, lang)
         results = {"Precision":results[0], "Recall":results[1], "F1":results[2]}
+        print(results)
     except Exception as ex:
         # Sometimes the model predicts a class that is not in REF
         print("Warning:", ex)
@@ -133,7 +156,7 @@ def evaluate_ote(gold_ot, pred_ot, lang):
         # hit number
         n_hit_ot = 0
         for ref, pred in zip(g_ot, p_ot):
-            if ref == pred and ref == id_T:
+            if pred == id_T and ref == id_T:
                 n_hit_ot += 1
 
         n_tp_ot += n_hit_ot
@@ -143,7 +166,7 @@ def evaluate_ote(gold_ot, pred_ot, lang):
     # calculate precision, recall and f1 for ote task
     ot_precision = float(n_tp_ot) / float(n_pred_ot + SMALL_POSITIVE_CONST)
     ot_recall = float(n_tp_ot) / float(n_gold_ot + SMALL_POSITIVE_CONST)
-    ot_f1 = 2 * ot_precision * ot_recall / (ot_precision + ot_recall + SMALL_POSITIVE_CONST)
+    ot_f1 = (2 * ot_precision * ot_recall) / (ot_precision + ot_recall + SMALL_POSITIVE_CONST)
     ote_scores = (ot_precision, ot_recall, ot_f1)
     return ote_scores
 
