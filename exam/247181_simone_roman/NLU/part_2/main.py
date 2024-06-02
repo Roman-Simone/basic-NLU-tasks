@@ -17,7 +17,7 @@ if __name__ == "__main__":
         "batch_dev_size": 64,
         "batch_test_size": 64,
         "hid_size": 768,
-        "n_epochs": 100,
+        "n_epochs": 4,
         "clip": 5,
     }
    
