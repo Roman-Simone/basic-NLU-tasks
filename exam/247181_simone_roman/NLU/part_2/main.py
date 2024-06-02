@@ -2,7 +2,7 @@ from functions import *
 from utils import *
 from model import *
 
-import os
+import copy
 import numpy as np
 from tqdm import tqdm
 import torch.optim as optim
@@ -12,8 +12,8 @@ from transformers import BertTokenizer
 if __name__ == "__main__":
     #Parameters
     config = {
-        "lr": 0.0001,
-        "batch_train_size": 128,
+        "lr": 5e-5,
+        "batch_train_size": 32,
         "batch_dev_size": 64,
         "batch_test_size": 64,
         "hid_size": 768,
@@ -55,10 +55,10 @@ if __name__ == "__main__":
     out_slot = len(lang.slot2id)
     out_int = len(lang.intent2id)
 
-    model = ModelBert(hid_size, out_slot, out_int).to(device)
+    model = ModelBert(config["hid_size"], out_slot, out_int).to(device)
     model.apply(init_weights)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = optim.Adam(model.parameters(), lr=config["lr"])
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
@@ -99,6 +99,6 @@ if __name__ == "__main__":
 
 
     name_exercise = "PART_2"
-    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc)
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
 
 

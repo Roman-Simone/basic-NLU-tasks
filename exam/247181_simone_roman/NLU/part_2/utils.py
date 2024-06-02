@@ -144,7 +144,7 @@ class IntentsAndSlots (data.Dataset):
                     tmp_attention.append(1)
                     tmp_token_type_id.append(0)
 
-            res_utterance.append(tmp_seq)
+            res_utterance.append(tmp_utt)
             res_slots.append(tmp_slot)
             res_attention.append(tmp_attention)
             res_token_type_id.append(tmp_token_type_id)

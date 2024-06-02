@@ -2,7 +2,7 @@ from utils import *
 from model import *
 from functions import *
 
-import os
+import copy
 import numpy as np
 from tqdm import tqdm
 import torch.optim as optim
@@ -13,16 +13,16 @@ if __name__ == "__main__":
 
     # PARAMETERS
     config = {
-        "lr": 0.00005,
-        "batch_train_size": 64,
-        "batch_dev_size": 128,
-        "batch_test_size": 128,
+        "lr": 5e-5,
+        "batch_train_size": 32,
+        "batch_dev_size": 64,
+        "batch_test_size": 64,
         "hid_size": 300,
         "emb_size": 400,
         "n_epochs": 200,
         "runs": 5,
-        "flag_bidirectional": True,
-        "flag_dropout": True,
+        "flag_bidirectional": False,
+        "flag_dropout": False,
     }
 
     # Load the data
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         losses_train = []
         losses_dev = []
         sampled_epochs = []
-        best_f1 = 0
+        best_score = 0
         for x in range(1, config["n_epochs"]):
             loss = train_loop(train_loader, optimizer, criterion_slots, 
                             criterion_intents, model)
@@ -90,14 +90,19 @@ if __name__ == "__main__":
                 results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, 
                                                             criterion_intents, model, lang)
                 losses_dev.append(np.asarray(loss_dev).mean())
+                
                 f1 = results_dev['total']['f']
-
-                if f1 > best_f1:
-                    best_f1 = f1
+                intent_acc = intent_res["accuracy"]
+                actual_score = (f1 + intent_acc) / 2
+                # For decreasing the patience you can also use the average between slot f1 and intent accuracy
+                if actual_score > best_score:
+                    best_score = actual_score
+                    best_model = copy.deepcopy(model).to('cpu')
+                    patience = 3
                 else:
                     patience -= 1
-                if patience <= 0: # Early stopping with patient
-                    break # Not nice but it keeps the code clean
+                if patience <= 0: # Early stopping with patience
+                    break 
 
         results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, 
                                                 criterion_intents, model, lang)
@@ -106,8 +111,8 @@ if __name__ == "__main__":
         intent_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
-        name_exercise = "PART_13"
-        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc)
+        name_exercise = "PART_11"
+        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
 
 
     slot_f1s = np.asarray(slot_f1s)

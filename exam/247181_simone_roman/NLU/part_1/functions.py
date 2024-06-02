@@ -100,7 +100,7 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
@@ -132,4 +132,4 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimiz
         file.write(f"Model: {model}\n")
 
     # To save the model
-    # torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
+    torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
