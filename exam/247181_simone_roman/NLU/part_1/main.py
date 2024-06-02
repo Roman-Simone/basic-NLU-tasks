@@ -22,7 +22,7 @@ if __name__ == "__main__":
         "n_epochs": 200,
         "runs": 1,
         "flag_bidirectional": True,
-        "flag_dropout": False,
+        "flag_dropout": True,
     }
 
     # Load the data
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         intents_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
-        name_exercise = "PART_12"
+        name_exercise = "PART_13"
         save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
 
 
