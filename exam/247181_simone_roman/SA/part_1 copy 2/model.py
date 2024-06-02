@@ -3,14 +3,14 @@ from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertMode
 
 class ModelBert(nn.Module):
 
-    def __init__(self, hid_size, out_aspect, dropout_rate=0.1):
+    def __init__(self, hid_size, out_slot, dropout_rate=0.1):
         super(ModelBert, self).__init__()
 
         self.bert = BertModel.from_pretrained('bert-base-uncased')
         
         self.dropout = nn.Dropout(dropout_rate)  # Dropout layer with specified dropout rate
         
-        self.slot_out = nn.Linear(hid_size, out_aspect)
+        self.slot_out = nn.Linear(hid_size, out_slot)
         
     def forward(self, utterances, attentions=None, token_type_ids=None):
         
