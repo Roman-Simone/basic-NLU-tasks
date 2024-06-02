@@ -2,10 +2,6 @@ import torch.nn as nn
 from transformers.models.bert.modeling_bert import BertPreTrainedModel, BertModel, BertConfig
 
 
-import torch
-import torch.nn as nn
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-
 class ModelBert(nn.Module):
 
     def __init__(self, hid_size, out_slot, out_int):

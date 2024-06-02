@@ -15,14 +15,14 @@ if __name__ == "__main__":
     config = {
         "lr": 0.00005,
         "batch_train_size": 64,
-        "batch_dev_size": 64,
-        "batch_test_size": 64,
+        "batch_dev_size": 128,
+        "batch_test_size": 128,
         "hid_size": 300,
         "emb_size": 400,
         "n_epochs": 200,
         "runs": 5,
-        "flag_bidirectional": False,
-        "flag_dropout": False,
+        "flag_bidirectional": True,
+        "flag_dropout": True,
     }
 
     # Load the data

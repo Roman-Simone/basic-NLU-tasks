@@ -16,7 +16,7 @@ class ModelIAS(nn.Module):
         
         self.flag_dropout = flag_dropout
         if flag_dropout:
-            self.dropout = nn.Dropout(0.5)
+            self.dropout = nn.Dropout(0.2)
     
         self.slot_out = nn.Linear(hid_size, out_slot)
         self.intent_out = nn.Linear(hid_size, out_int)

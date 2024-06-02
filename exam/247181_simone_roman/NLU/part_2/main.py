@@ -10,8 +10,17 @@ from torch.utils.data import DataLoader
 from transformers import BertTokenizer
 
 if __name__ == "__main__":
-    #Pasameters
-
+    #Parameters
+    config = {
+        "lr": 0.0001,
+        "batch_train_size": 128,
+        "batch_dev_size": 64,
+        "batch_test_size": 64,
+        "hid_size": 768,
+        "n_epochs": 100,
+        "clip": 5,
+    }
+   
 
     #load data
     print("TAKE DATASET")
@@ -29,47 +38,40 @@ if __name__ == "__main__":
     slots = set(sum([line['slots'].split() for line in corpus],[]))
     intents = set([line['intent'] for line in corpus])
 
+    print("CREATE LANG")
+    # Create an id for each word, intent and slot for word use bert tokenizer
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     lang = Lang(intents, slots, cutoff=0)
-    print("CREATE LANG")
-
+    
     train_dataset = IntentsAndSlots(train_raw, lang, tokenizer)
     dev_dataset = IntentsAndSlots(dev_raw, lang, tokenizer)
     test_dataset = IntentsAndSlots(test_raw, lang, tokenizer)
 
-    train_loader = DataLoader(train_dataset, batch_size=128, collate_fn=collate_fn,  shuffle=True)
-    dev_loader = DataLoader(dev_dataset, batch_size=64, collate_fn=collate_fn)
-    test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=collate_fn)
-
     print("CREATE DATALOADERS")
-
-
-
-    hid_size = 768
-    emb_size = 300
-    lr = 0.0001 # learning rate
-    clip = 5 # Clip the gradient
+    train_loader = DataLoader(train_dataset, batch_size=config["batch_train_size"], collate_fn=collate_fn,  shuffle=True)
+    dev_loader = DataLoader(dev_dataset, batch_size=config["batch_dev_size"], collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=config["batch_test_size"], collate_fn=collate_fn)
 
     out_slot = len(lang.slot2id)
     out_int = len(lang.intent2id)
 
     model = ModelBert(hid_size, out_slot, out_int).to(device)
-    
+    model.apply(init_weights)
+
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
         
-    n_epochs = 200
     patience = 3
     losses_train = []
     losses_dev = []
     sampled_epochs = []
-    best_f1 = 0
-    for x in tqdm(range(1,n_epochs)):
+    best_score = 0
+    for x in tqdm(range(1, config["n_epochs"])):
         loss = train_loop(train_loader, optimizer, criterion_slots, 
-                        criterion_intents, model, clip=clip)
-        if x % 5 == 0: # We check the performance every 5 epochs
+                        criterion_intents, model, clip=config["clip"])
+        if x % 3 == 0: # We check the performance every n epochs
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
 
@@ -77,17 +79,26 @@ if __name__ == "__main__":
             losses_dev.append(np.asarray(loss_dev).mean())
             
             f1 = results_dev['total']['f']
+            intent_acc = intent_res["accuracy"]
+            actual_score = (f1 + intent_acc) / 2
             # For decreasing the patience you can also use the average between slot f1 and intent accuracy
-            if f1 > best_f1:
-                best_f1 = f1
-                # Here you should save the model
+            if actual_score > best_score:
+                best_score = actual_score
+                best_model = copy.deepcopy(model).to('cpu')
                 patience = 3
             else:
                 patience -= 1
             if patience <= 0: # Early stopping with patience
-                break # Not nice but it keeps the code clean
-
+                break 
     results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, model, lang, tokenizer)    
-    print('Slot F1: ', results_test['total']['f'])
-    print('Intent Accuracy:', intent_test['accuracy'])
+    test_f1 = results_test['total']['f']
+    test_acc = intent_test['accuracy']
+    
+    print('Slot F1: ', test_f1)
+    print('Intent Accuracy:', test_acc)
+
+
+    name_exercise = "PART_2"
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc)
+
 

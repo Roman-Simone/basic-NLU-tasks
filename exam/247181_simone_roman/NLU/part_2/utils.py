@@ -1,16 +1,15 @@
-# Add functions or classes used for data loading and preprocessing
 import json
 import torch
+import torch.utils.data as data
 from collections import Counter
 from sklearn.model_selection import train_test_split
-import torch.utils.data as data
 
-
+#constant
 PAD_TOKEN = 0
 CLS_TOKEN = 101
 SEP_TOKEN = 102
-device = torch.device("cuda:0" if torch.cuda.is_available() else "mps")
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "mps")
 
 
 def load_data(path):
@@ -24,6 +23,7 @@ def load_data(path):
     return dataset
 
 
+# creation dev
 def create_dev(tmp_train_raw):
     # First we get the 10% of the training set, then we compute the percentage of these examples 
     portion = 0.10
@@ -52,6 +52,7 @@ def create_dev(tmp_train_raw):
     return train_raw, dev_raw
 
 
+# creation tokenizer for intent and slot
 class Lang():
     def __init__(self, intents, slots, cutoff=0):
         self.slot2id = self.lab2id(slots)
@@ -73,20 +74,21 @@ class Lang():
 
 
 class IntentsAndSlots (data.Dataset):
-    # Mandatory methods are __init__, __len__ and __getitem__
     def __init__(self, dataset, lang, tokenizer, unk='unk'):
         self.utterances = []
         self.intents = []
         self.slots = []
         self.unk = unk
         
+        #Adding special token for bert
         for x in dataset:
             self.utterances.append("[CLS] " + x['utterance'] + " [SEP]")
             self.slots.append("O " + x['slots'] + " O")
             self.intents.append(x['intent'])
 
+        #Create maps with utterance - slots and create also attention mask and token_type_id
         self.utt_ids, self.slots_ids, self.attention_mask, self.token_type_id = self.mapping_seq(self.utterances, self.slots, tokenizer, lang.slot2id) 
-        # self.check_len(self.utt_ids, self.slots_ids)
+        
         self.intent_ids = self.mapping_lab(self.intents, lang.intent2id)
 
     def __len__(self):
@@ -106,7 +108,9 @@ class IntentsAndSlots (data.Dataset):
     def mapping_lab(self, data, mapper):
         return [mapper[x] if x in mapper else mapper[self.unk] for x in data]
     
-    def mapping_seq(self, utterance, slots, tokenizer, mapper_slot): # Map sequences to number
+
+    def mapping_seq(self, utterance, slots, tokenizer, mapper_slot): 
+        
         res_utterance = []
         res_slots = []
         res_attention = []
@@ -114,24 +118,30 @@ class IntentsAndSlots (data.Dataset):
 
         for sequence, slot in zip(utterance, slots):
 
-            tmp_seq = []
+            tmp_utt = []
             tmp_slot = []
             tmp_attention = []
             tmp_token_type_id = []
 
+            #tokenize word per word with bert_tokenizer
             for word, element in zip(sequence.split(), slot.split(' ')):
                 tmp_attention.append(1)
                 tmp_token_type_id.append(0)
 
+                #use bert tokenizer
                 word_tokens = tokenizer(word)
+                
                 #remove CLS and SEP tokens
                 word_tokens = word_tokens[1:-1]
-                tmp_seq.extend(word_tokens["input_ids"])
+                 
+                tmp_utt.extend(word_tokens["input_ids"])
 
+                #add true id to first word, others 'pad'
                 tmp_slot.extend([mapper_slot[element]] + [mapper_slot['pad']] * (len(word_tokens["input_ids"]) - 1))
 
+                # create attention mask 
                 for i in range(len(word_tokens["input_ids"])-1):
-                    tmp_attention.append(0)
+                    tmp_attention.append(1)
                     tmp_token_type_id.append(0)
 
             res_utterance.append(tmp_seq)
@@ -162,9 +172,9 @@ def collate_fn(data):
         padded_seqs = torch.LongTensor(len(sequences),max_len).fill_(PAD_TOKEN)
         for i, seq in enumerate(sequences):
             end = lengths[i]
-            padded_seqs[i, :end] = seq # We copy each sequence into the matrix
-        # print(padded_seqs)
-        padded_seqs = padded_seqs.detach()  # We remove these tensors from the computational graph
+            padded_seqs[i, :end] = seq # copy each sequence into the matrix
+
+        padded_seqs = padded_seqs.detach()  # remove these tensors from the computational graph
         return padded_seqs, lengths
     
 
@@ -174,14 +184,14 @@ def collate_fn(data):
     for key in data[0].keys():
         new_item[key] = [d[key] for d in data]
         
-    # We just need one length for packed pad seq, since len(utt) == len(slots)
+    # just need one length for packed pad seq, since len(utt) == len(slots)
     src_utt, _ = merge(new_item['utterance'])
     y_slots, y_lengths = merge(new_item["slots"])
     intent = torch.LongTensor(new_item["intent"])
     attention, _ = merge(new_item["attention"])
     token_type_id, _ = merge(new_item["token_type_id"])
     
-    src_utt = src_utt.to(device) # We load the Tensor on our selected device
+    src_utt = src_utt.to(device) # load the Tensor on our selected device
     y_slots = y_slots.to(device)
     intent = intent.to(device)
     y_lengths = torch.LongTensor(y_lengths).to(device)
