@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # PARAMETERS
     config = {
-        "lr": 5e-10,
+        "lr": 5e-5,
         "batch_train_size": 32,
         "batch_dev_size": 64,
         "batch_test_size": 64,
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "emb_size": 400,
         "n_epochs": 200,
         "runs": 1,
-        "flag_bidirectional": False,
+        "flag_bidirectional": True,
         "flag_dropout": False,
     }
 
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         intents_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
-        name_exercise = "PART_11"
+        name_exercise = "PART_12"
         save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
 
 
