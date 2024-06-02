@@ -10,14 +10,19 @@ from torch.utils.data import DataLoader
 from transformers import BertTokenizer
 
 if __name__ == "__main__":
+    #Pasameters
+
+
+    #load data
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
     tmp_train_raw = load_data(os.path.join(current_dir, "dataset/ATIS/train.json"))
     test_raw = load_data(os.path.join(current_dir, "dataset/ATIS/test.json"))
 
     #create the dev set 
-    train_raw, dev_raw = create_dev(tmp_train_raw)
     print("CREATE DEV SET")
+    train_raw, dev_raw = create_dev(tmp_train_raw)
+    
 
     # All the words in the train
     corpus = train_raw + dev_raw + test_raw # We do not wat unk labels, 

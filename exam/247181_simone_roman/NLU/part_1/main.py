@@ -13,14 +13,16 @@ if __name__ == "__main__":
 
     # PARAMETERS
     config = {
-        "lr": 0.0001,
-        "batch_train_size": 128,
+        "lr": 0.00005,
+        "batch_train_size": 64,
         "batch_dev_size": 64,
         "batch_test_size": 64,
-        "hid_size": 200,
-        "emb_size": 300,
+        "hid_size": 300,
+        "emb_size": 400,
         "n_epochs": 200,
         "runs": 5,
+        "flag_bidirectional": False,
+        "flag_dropout": False,
     }
 
     # Load the data
@@ -55,7 +57,8 @@ if __name__ == "__main__":
     out_int = len(lang.intent2id)
     vocab_len = len(lang.word2id)
 
-    model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
+    model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], 
+                    vocab_len, pad_index=PAD_TOKEN, flag_bidirectional=config["flag_bidirectional"], flag_dropout=config["flag_dropout"]).to(device)
     model.apply(init_weights)
 
     optimizer = optim.Adam(model.parameters(), lr=config["lr"])
@@ -64,8 +67,9 @@ if __name__ == "__main__":
 
     slot_f1s, intent_acc = [], []
     for x in tqdm(range(0, config["runs"])):
-        model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], 
-                        vocab_len, pad_index=PAD_TOKEN, bidirectional=True).to(device)
+        model = ModelIAS(config["hid_size"], out_slot, out_int, config["emb_size"], vocab_len, 
+                         pad_index=PAD_TOKEN, flag_bidirectional=config["flag_bidirectional"], flag_dropout=config["flag_dropout"]).to(device)
+    
         model.apply(init_weights)
 
         optimizer = optim.Adam(model.parameters(), lr=config["lr"])
@@ -98,11 +102,12 @@ if __name__ == "__main__":
         results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, 
                                                 criterion_intents, model, lang)
         test_f1 = results_test['total']['f']
+        test_acc = intent_test['accuracy']
         intent_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
-        name_exercise = "PART_11"
-        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1)
+        name_exercise = "PART_13"
+        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc)
 
 
     slot_f1s = np.asarray(slot_f1s)

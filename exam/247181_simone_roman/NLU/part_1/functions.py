@@ -100,14 +100,14 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
-    title = f"{name_exercise}_test_{num_folders + 1}_f1_{round(test_f1*100,2)}"
+    title = f"{name_exercise}_test_{num_folders + 1}_f1_{round(test_f1*100,2)}_acc_{round(test_acc*100,2)}"
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
@@ -124,7 +124,8 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimiz
     file_path = os.path.join(folder_path, "training_parameters.txt")
     with open(file_path, "w") as file:
         file.write(f"{name_exercise}\n\n")
-        file.write(f"F1: {test_f1}\n")
+        file.write(f"slot filling F1: {test_f1}\n")
+        file.write(f"accuracy intent: {test_acc}")
         for key, value in config.items():
             file.write(f"{key}: {value}\n")
         file.write(f"Optimizer: {optimizer}\n")
