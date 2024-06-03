@@ -63,7 +63,7 @@ if __name__ == "__main__":
     criterion_intents = nn.CrossEntropyLoss() # Because we do not have the pad token
 
         
-    patience = 3
+    patience = 4
     losses_train = []
     losses_dev = []
     sampled_epochs = []
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     for x in tqdm(range(1, config["n_epochs"])):
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=config["clip"])
-        if x % 3 == 0: # We check the performance every n epochs
+        if x % 1 == 0: # We check the performance every n epochs
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
 
@@ -85,7 +85,7 @@ if __name__ == "__main__":
             if actual_score > best_score:
                 best_score = actual_score
                 best_model = copy.deepcopy(model).to('cpu')
-                patience = 3
+                patience = 4
             else:
                 patience -= 1
             if patience <= 0: # Early stopping with patience

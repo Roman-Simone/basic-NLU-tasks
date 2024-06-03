@@ -34,6 +34,8 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
 
     ref_slots = []
     hyp_slots = []
+    ref_slots_no_pad = [] #version of ref_slots without pad
+    hyp_slots_no_pad = []
 
     with torch.no_grad():
         for sample in data:
@@ -63,22 +65,34 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
                 gt_ids = sample['y_slots'][id_seq].tolist()
                 gt_slots = [lang.id2slot[elem] for elem in gt_ids[:length]]
 
-                pad_positions = [i for i, slot in enumerate(gt_slots) if slot == 'pad']
-                ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots) if elem != 'pad'])
-                # ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
+                ref_slots.append([(utterance[id_el], elem) for id_el, elem in enumerate(gt_slots)])
                 
                 to_decode = seq[:length].tolist()  
-                # print(to_decode)
                 tmp_seq = []
                 for id_el, elem in enumerate(to_decode):
                     tmp_seq.append((utterance[id_el], lang.id2slot[elem]))
-                # hyp_slots.append(tmp_seq)
-                hyp_slots.append([tmp_seq[id_el] for id_el, elem in enumerate(to_decode) if id_el not in pad_positions])
-                
+                hyp_slots.append(tmp_seq)
+        
+
+
+        #remove pad tokens from reference and hypothesis for evaluation
+        for refs, hyps in zip(ref_slots, hyp_slots):
+            tmp_ref = []
+            tmp_hyp = []
+            for elem_ref, elem_hyp in zip(refs, hyps):
+                if elem_ref[1] != 'pad':  #check if pad continue
+                    tmp_ref.append(elem_ref)
+                    tmp_hyp.append(elem_hyp)
+            
+            ref_slots_no_pad.append(tmp_ref)
+            hyp_slots_no_pad.append(tmp_hyp)
+
+
+          
 
 
     try:            
-        results = evaluate(ref_slots, hyp_slots)
+        results = evaluate(ref_slots_no_pad, hyp_slots_no_pad)
     except Exception as ex:
         # Sometimes the model predicts a class that is not in REF
         print("Warning:", ex)

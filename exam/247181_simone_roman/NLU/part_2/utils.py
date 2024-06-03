@@ -83,7 +83,7 @@ class IntentsAndSlots (data.Dataset):
         #Adding special token for bert
         for x in dataset:
             self.utterances.append("[CLS] " + x['utterance'] + " [SEP]")
-            self.slots.append("O " + x['slots'] + " O")
+            self.slots.append("pad " + x['slots'] + " pad")
             self.intents.append(x['intent'])
 
         #Create maps with utterance - slots and create also attention mask and token_type_id

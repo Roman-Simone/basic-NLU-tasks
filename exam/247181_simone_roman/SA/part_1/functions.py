@@ -42,21 +42,20 @@ def eval_loop(data, criterion_slots, model, lang, tokenizer):
             # Slot inference
             output_aspects = torch.argmax(aspects, dim=1)
             for id_seq, seq in enumerate(output_aspects):
-
+                
+                #take ground truth
                 gt_ids = sample['y_aspect'][id_seq].tolist()
 
-                #remove pad id and save pos of pad
-                pos_pad = []
-                gt_ids_no_pad = []
-                for id, elem in enumerate(gt_ids):
-                    if elem != id_pad:
-                        gt_ids_no_pad.append(elem)
-                    else:
-                        pos_pad.append(id)
-
-                #take slot output and remove pad from positions took before
+                #take slot output 
                 to_decode = seq.tolist()
-                to_decode_no_pad = [to_decode[id] for id in range(len(to_decode)) if id not in pos_pad]
+
+                #remove pad from gt_ids and from to__decode
+                gt_ids_no_pad = []
+                to_decode_no_pad = []
+                for elem_gt, elem_hyp in zip(gt_ids, to_decode):
+                    if elem_gt != id_pad:
+                        gt_ids_no_pad.append(elem_gt)
+                        to_decode_no_pad.append(elem_hyp)
 
                 ref_aspects.append(gt_ids_no_pad)
                 hyp_aspects.append(to_decode_no_pad)
