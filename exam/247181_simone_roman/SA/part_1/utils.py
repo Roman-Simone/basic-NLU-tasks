@@ -18,7 +18,7 @@ def create_dev(tmp_train_raw):
     train_data, dev_data = train_test_split(tmp_train_raw, test_size=0.1, random_state=42)
     return train_data, dev_data
 
-# Function to split data into utterance and slot pairs
+# Function to split data into sentence and aspect pairs
 def split_data(data):
     data_ret = []
     for elem in data:
