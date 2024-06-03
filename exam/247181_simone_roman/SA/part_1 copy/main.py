@@ -104,7 +104,7 @@ if __name__ == "__main__":
             if patience <= 0:  # Early stopping
                 break  
 
-        pbar.set_description(f"Loss: {np.asarray(loss).mean():.2f}")
+        pbar.set_description(f"Loss: {np.asarray(loss).mean():.2f}, score-> {result_dev}")
 
     # Test the best model on the test set
     results_test, _ = eval_loop(test_loader, criterion_slots, model, lang, tokenizer)    

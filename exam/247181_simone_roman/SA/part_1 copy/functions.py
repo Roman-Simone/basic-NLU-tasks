@@ -67,7 +67,6 @@ def eval_loop(data, criterion_slots, model, lang, tokenizer):
     try:
         results = evaluate_ote(ref_aspects, hyp_aspects, lang)
         results = {"Precision": results[0], "Recall": results[1], "F1": results[2]}
-        print(results)
     except Exception as ex:
         # Handle cases where the model predicts a class not in reference
         print("Warning:", ex)
@@ -131,8 +130,10 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config,
         os.makedirs(folder_path)
 
     num_folders = len([name for name in os.listdir(folder_path) if name.startswith(name_exercise)])
-
-    title = f"{name_exercise}_test_{num_folders + 1}"
+    precision = round(results_test['Precision']*100,2)
+    recall = round(results_test['Recall']*100,2)
+    f1 = round(results_test['F1']*100,2)
+    title = f"{name_exercise}_test_{num_folders + 1}_f1_{f1}_Prec_{precision}_recall_{recall}"
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
