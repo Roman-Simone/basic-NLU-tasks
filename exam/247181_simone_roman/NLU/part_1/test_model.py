@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_1/results/PART_13_test_2_f1_94.5_acc_94.51/model.pt"
+    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_1/results/PART_13_test_3_f1_94.14_acc_95.41/model.pt"
     loaded_object = torch.load(path_model_saved)
     
     # PARAMETERS
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "hid_size": 300,
         "emb_size": 400,
         "flag_bidirectional": True,
-        "flag_dropout": True,
+        "flag_dropout": False,
     }
 
     # Load the data
