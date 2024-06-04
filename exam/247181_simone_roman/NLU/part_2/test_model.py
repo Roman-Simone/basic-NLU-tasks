@@ -11,8 +11,8 @@ from transformers import BertTokenizer
 
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_2/results/PART_2_test_4_f1_95.48_acc_96.98/model.pt"
-    loaded_object = torch.load(path_model_saved)
+    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/NLU/part_2/results/PART_2_test_4_f1_95.48_acc_96.98/model.pt"
+    loaded_object = torch.load(path_model_saved, map_location=device)
 
     #Parameters
     config = {
@@ -51,5 +51,4 @@ if __name__ == "__main__":
     test_f1 = results_test['total']['f']
     test_acc = intent_test['accuracy']
     
-    print('Slot F1: ', test_f1)
-    print('Intent Accuracy:', test_acc)
+    print(f"Slot F1: {test_f1}  Intent Accuracy: {test_acc}")

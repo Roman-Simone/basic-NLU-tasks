@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 # Main function
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/LM/part_1/results/PART_13_test_2_PPL_106/model.pt"
+    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/LM/part_1/results/PART_13_test_5_PPL_106_/model.pt"
 
     # PARAMETERS
     # For model_11.pt  setting --> "hid_size": 500, "emb_size": 500
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # TRAINING
     model = LM_LSTM(config["emb_size"], config["hid_size"], vocab_len, pad_index=lang.word2id["<pad>"]).to(DEVICE)
-    model.load_state_dict(torch.load(path_model_saved))
+    model.load_state_dict(torch.load(path_model_saved, map_location=DEVICE))
 
     criterion_eval = nn.CrossEntropyLoss(ignore_index=lang.word2id["<pad>"], reduction='sum')
 

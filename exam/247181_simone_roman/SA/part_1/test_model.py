@@ -8,8 +8,8 @@ from torch.utils.data import DataLoader
 # Main function
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/SA/part_1/results/SA_test_8_f1_86.59_Prec_88.06_recall_85.18/model.pt"
-    loaded_object = torch.load(path_model_saved)
+    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/SA/part_1/results/SA_test_8_f1_86.59_Prec_88.06_recall_85.18/model.pt"
+    loaded_object = torch.load(path_model_saved, map_location=device)
 
     # Configuration parameters
     config = {

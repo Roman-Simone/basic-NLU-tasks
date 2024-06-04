@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_1/results/PART_13_test_3_f1_94.14_acc_95.41/model.pt"
-    loaded_object = torch.load(path_model_saved)
+    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/NLU/part_1/results/PART_13_test_3_f1_94.14_acc_95.41/model.pt"
+    loaded_object = torch.load(path_model_saved, map_location=device)
     
     # PARAMETERS
     # For model_11.pt  setting --> "flag_bidirectional": False, "flag_dropout": False
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         "hid_size": 300,
         "emb_size": 400,
         "flag_bidirectional": True,
-        "flag_dropout": False,
+        "flag_dropout": True,
     }
 
     # Load the data
@@ -57,6 +57,4 @@ if __name__ == "__main__":
     test_f1 = results_test['total']['f']
     test_acc = intent_test['accuracy']
 
-    print(test_f1, test_acc)
-
-    
+    print(f"Test F1 Score: {test_f1}, Test Accuracy: {test_acc}")
