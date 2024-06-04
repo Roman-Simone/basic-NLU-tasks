@@ -7,14 +7,14 @@ import matplotlib.pyplot as plt
 SMALL_POSITIVE_CONST = 1e-4
 
 # Training loop function
-def train_loop(data, optimizer, criterion_slots, model, clip=5):
+def train_loop(data, optimizer, criterion_aspects, model, clip=5):
     model.train()
     loss_array = []
 
     for sample in data:
         optimizer.zero_grad()  # Zeroing the gradient
         aspects = model(sample['sentences'], sample["attentions"], sample["token_type_ids"])
-        loss_slot = criterion_slots(aspects, sample['y_aspect'])
+        loss_slot = criterion_aspects(aspects, sample['y_aspect'])
 
         loss_array.append(loss_slot.item())
         loss_slot.backward()
@@ -24,7 +24,7 @@ def train_loop(data, optimizer, criterion_slots, model, clip=5):
     return loss_array
 
 # Evaluation loop function
-def eval_loop(data, criterion_slots, model, lang, tokenizer):
+def eval_loop(data, criterion_aspects, model, lang, tokenizer):
     model.eval()
     
     loss_array = []
@@ -36,7 +36,7 @@ def eval_loop(data, criterion_slots, model, lang, tokenizer):
     with torch.no_grad():
         for sample in data:
             aspects = model(sample['sentences'], sample["attentions"], sample["token_type_ids"])
-            loss_slot = criterion_slots(aspects, sample['y_aspect'])
+            loss_slot = criterion_aspects(aspects, sample['y_aspect'])
             loss_array.append(loss_slot.item())
 
             # Slot inference

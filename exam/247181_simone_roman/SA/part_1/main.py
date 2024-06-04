@@ -66,7 +66,7 @@ if __name__ == "__main__":
     
     # Configure the optimizer and loss function
     optimizer = optim.Adam(model.parameters(), lr=config['lr'])
-    criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
+    criterion_aspects = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
 
     losses_train = []
     losses_dev = []
@@ -78,14 +78,14 @@ if __name__ == "__main__":
     pbar = tqdm(range(1, config["n_epochs"]))
     for x in pbar:
         # Execute the training loop
-        loss = train_loop(train_loader, optimizer, criterion_slots, model, clip=config["clip"])
+        loss = train_loop(train_loader, optimizer, criterion_aspects, model, clip=config["clip"])
 
         # Validate the model every epoch
         if x % 1 == 0:  # Check performance every epoch
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
 
-            result_dev, loss_dev = eval_loop(dev_loader, criterion_slots, model, lang, tokenizer)
+            result_dev, loss_dev = eval_loop(dev_loader, criterion_aspects, model, lang, tokenizer)
             losses_dev.append(np.asarray(loss_dev).mean())
             results_dev.append(result_dev)
             precision = result_dev['Precision']
@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # Test the best model on the test set
     best_model.to(device)
-    results_test, _ = eval_loop(test_loader, criterion_slots, best_model, lang, tokenizer)    
+    results_test, _ = eval_loop(test_loader, criterion_aspects, best_model, lang, tokenizer)    
     precision = results_test['Precision']
     recall = results_test['Recall']
     f1 = results_test['F1']

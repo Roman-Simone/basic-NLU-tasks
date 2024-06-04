@@ -46,10 +46,10 @@ if __name__ == "__main__":
     model.load_state_dict(loaded_object["model"])
     
     # Configure the optimizer and loss function
-    criterion_slots = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
+    criterion_aspects = nn.CrossEntropyLoss(ignore_index=PAD_TOKEN)
 
     # Test the best model on the test set
-    results_test, _ = eval_loop(test_loader, criterion_slots, model, lang, tokenizer)    
+    results_test, _ = eval_loop(test_loader, criterion_aspects, model, lang, tokenizer)    
     precision = results_test['Precision']
     recall = results_test['Recall']
     f1 = results_test['F1']
