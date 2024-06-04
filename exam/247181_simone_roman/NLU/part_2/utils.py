@@ -68,6 +68,12 @@ class Lang():
         for elem in elements:
                 vocab[elem] = int(len(vocab))
         return vocab
+
+    def load(self, s2id, i2id):
+        self.slot2id = s2id
+        self.intent2id = i2id
+        self.id2slot = {v:k for k, v in self.slot2id.items()}
+        self.id2intent = {v:k for k, v in self.intent2id.items()}
     
 
 

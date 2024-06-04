@@ -107,7 +107,8 @@ if __name__ == "__main__":
         pbar.set_description(f"Loss: {np.asarray(loss).mean():.2f}, score-> {result_dev}")
 
     # Test the best model on the test set
-    results_test, _ = eval_loop(test_loader, criterion_slots, model, lang, tokenizer)    
+    best_model.to(device)
+    results_test, _ = eval_loop(test_loader, criterion_slots, best_model, lang, tokenizer)    
     precision = results_test['Precision']
     recall = results_test['Recall']
     f1 = results_test['F1']
@@ -116,4 +117,4 @@ if __name__ == "__main__":
 
     # Save the results
     name_exercise = "SA"
-    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model)
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model, lang, optimizer)

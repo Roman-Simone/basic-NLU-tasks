@@ -90,7 +90,10 @@ if __name__ == "__main__":
                 patience -= 1
             if patience <= 0: # Early stopping with patience
                 break 
-    results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, model, lang, tokenizer)    
+    
+
+    best_model.to(device)
+    results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, best_model, lang, tokenizer)    
     test_f1 = results_test['total']['f']
     test_acc = intent_test['accuracy']
     
@@ -99,6 +102,6 @@ if __name__ == "__main__":
 
 
     name_exercise = "PART_2"
-    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
+    save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model, lang)
 
 

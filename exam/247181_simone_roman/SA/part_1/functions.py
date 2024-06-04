@@ -122,7 +122,7 @@ def evaluate_ote(gold_ot, pred_ot, lang):
     return ot_precision, ot_recall, ot_f1
 
 # Save the training results
-def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model):
+def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config, results_dev, results_test, best_model, lang, optimizer):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     folder_path = os.path.join(current_dir, "results")
     if not os.path.exists(folder_path):
@@ -154,4 +154,9 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, config,
             file.write(f"{key}: {value}\n")
 
     # Save the best model
-    torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
+    path_model = os.path.join(os.path.join(folder_path, "model.pt"))
+    saving_object = {"epoch": len(sampled_epochs), 
+                     "model": best_model.state_dict(), 
+                     "optimizer": optimizer.state_dict(), 
+                     "aspect2id": lang.aspect2id}
+    torch.save(saving_object, path_model)

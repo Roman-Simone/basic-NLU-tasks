@@ -74,6 +74,14 @@ class Lang():
         for elem in elements:
                 vocab[elem] = len(vocab)
         return vocab
+    
+    def load(self, w2i, s2id, i2id):
+        self.word2id = w2i
+        self.slot2id = s2id
+        self.intent2id = i2id
+        self.id2word = {v:k for k, v in self.word2id.items()}
+        self.id2slot = {v:k for k, v in self.slot2id.items()}
+        self.id2intent = {v:k for k, v in self.intent2id.items()}
 
 
 class IntentsAndSlots (data.Dataset):

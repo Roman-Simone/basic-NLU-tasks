@@ -58,6 +58,10 @@ class Lang():
         for elem in elements:
             vocab[elem] = int(len(vocab))
         return vocab
+    
+    def load(self, a2id):
+        self.aspect2id = a2id
+        self.id2aspect = {v:k for k, v in self.aspect2id.items()}
 
 # Custom dataset class for intents and slots
 class map_aspect(data.Dataset):

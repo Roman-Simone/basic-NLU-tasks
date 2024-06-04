@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # PARAMETERS
     config = {
         "lr": 5e-5,
-        "batch_train_size": 32,
+        "batch_train_size": 64,
         "batch_dev_size": 64,
         "batch_test_size": 64,
         "hid_size": 300,
@@ -103,18 +103,19 @@ if __name__ == "__main__":
                     patience -= 1
                 if patience <= 0: # Early stopping with patience
                     break 
-
+        
+        best_model.to(device)
         results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, 
-                                                criterion_intents, model, lang)
+                                                criterion_intents, best_model, lang)
         test_f1 = results_test['total']['f']
         test_acc = intent_test['accuracy']
         intents_acc.append(intent_test['accuracy'])
         slot_f1s.append(results_test['total']['f'])
 
         name_exercise = "PART_13"
-        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model)
+        save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model, lang)
 
-
+    
     slot_f1s = np.asarray(slot_f1s)
     intents_acc = np.asarray(intents_acc)
     print('Slot F1', round(slot_f1s.mean(),3), '+-', round(slot_f1s.std(),3))

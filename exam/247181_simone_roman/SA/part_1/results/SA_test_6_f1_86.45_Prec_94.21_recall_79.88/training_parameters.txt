@@ -1,0 +1,13 @@
+SA
+
+lr: 0.0001
+batch_train_size: 128
+batch_dev_size: 128
+batch_test_size: 128
+clip: 5
+n_epochs: 100
+hid_size: 768
+Results:
+Precision: 0.9421111302938558
+Recall: 0.7988449664249311
+F1: 0.8645335847208009
