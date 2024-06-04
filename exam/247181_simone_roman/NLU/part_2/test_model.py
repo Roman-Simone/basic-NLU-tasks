@@ -11,7 +11,7 @@ from transformers import BertTokenizer
 
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_2/results/PART_2_test_3_f1_95.54_acc_96.86/model.pt"
+    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/NLU/part_2/results/PART_2_test_4_f1_95.48_acc_96.98/model.pt"
     loaded_object = torch.load(path_model_saved)
 
     #Parameters

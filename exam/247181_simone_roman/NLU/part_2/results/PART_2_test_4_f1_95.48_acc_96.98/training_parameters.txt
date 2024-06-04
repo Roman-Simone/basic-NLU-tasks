@@ -1,7 +1,7 @@
 PART_2
 
-slot filling F1: 0.9580186193571053
-accuracy intent: 0.9798432250839866lr: 5e-05
+slot filling F1: 0.9548409769811983
+accuracy intent: 0.9697648376259799lr: 5e-05
 batch_train_size: 32
 batch_dev_size: 64
 batch_test_size: 64

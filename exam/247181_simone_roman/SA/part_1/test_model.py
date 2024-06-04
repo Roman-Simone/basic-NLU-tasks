@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 # Main function
 if __name__ == "__main__":
     # write path of the model
-    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/SA/part_1/results/SA_test_7_f1_86.37_Prec_91.13_recall_82.1/model.pt"
+    path_model_saved = "/home/disi/NLU/exam/247181_simone_roman/SA/part_1/results/SA_test_8_f1_86.59_Prec_88.06_recall_85.18/model.pt"
     loaded_object = torch.load(path_model_saved)
 
     # Configuration parameters
@@ -16,7 +16,6 @@ if __name__ == "__main__":
         "batch_test_size": 128,       # Batch size for testing
         "hid_size": 768,              # Hidden state size
     }
-    patience = 3
 
     print("TAKE DATASET")
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +31,6 @@ if __name__ == "__main__":
     # Load lang
     lang = Lang([], cutoff=0)
     lang.load(loaded_object["aspect2id"])
-
 
     # Create datasets for training, validation, and testing
     test_dataset = map_aspect(test_raw_split, lang, tokenizer)
