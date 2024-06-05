@@ -3,7 +3,6 @@ import pathlib
 from transformers import BertTokenizer
 from torch.utils.data import DataLoader
 
-
 # directory reach
 directory = pathlib.Path(__file__).parent.resolve()
 sys.path.append(str(directory.parent))

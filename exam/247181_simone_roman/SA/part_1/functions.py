@@ -97,7 +97,7 @@ def init_weights(mat):
                 if m.bias is not None:
                     m.bias.data.fill_(0.01)
 
-# Evaluate the model performance for the OTE task
+# Evaluate the model performance 
 def evaluate_ote(gold_ot, pred_ot, lang):
     id_pad = lang.aspect2id['pad']
     id_T = lang.aspect2id['T']
@@ -109,11 +109,12 @@ def evaluate_ote(gold_ot, pred_ot, lang):
         g_ot = gold_ot[i]
         p_ot = pred_ot[i]
         
+        # hit if the target is T and the prediction is T
         n_hit_ot = sum(1 for ref, pred in zip(g_ot, p_ot) if pred == id_T and ref == id_T)
 
         n_tp_ot += n_hit_ot
-        n_gold_ot += sum(1 for ot in g_ot if ot == id_T)
-        n_pred_ot += sum(1 for ot in p_ot if ot == id_T)
+        n_gold_ot += sum(1 for ot in g_ot if ot == id_T) # count the number of T in the reference
+        n_pred_ot += sum(1 for ot in p_ot if ot == id_T) # count the number of T in the prediction
 
     ot_precision = float(n_tp_ot) / float(n_pred_ot + SMALL_POSITIVE_CONST)
     ot_recall = float(n_tp_ot) / float(n_gold_ot + SMALL_POSITIVE_CONST)

@@ -1,14 +1,22 @@
-from utils import *      # Import all functions from the utils module
-from model import *      # Import all functions and classes from the model module
-from functions import *  # Import all functions from the functions module
-
+import sys
+import pathlib
 from transformers import BertTokenizer
 from torch.utils.data import DataLoader
 
+# directory reach
+directory = pathlib.Path(__file__).parent.resolve()
+sys.path.append(str(directory.parent))
+
+from utils import *
+from model import *
+from functions import *  # Import everything from functions.py file
+
 # Main function
 if __name__ == "__main__":
-    # write path of the model
-    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/SA/part_1/results/SA_test_8_f1_86.59_Prec_88.06_recall_85.18/model.pt"
+    # NAME OF THE MODEL to load
+    # name_model = "model_11.pt"
+    name_model = "model_11.pt"
+    path_model_saved = f"{directory.parent}/bin/{name_model}"
     loaded_object = torch.load(path_model_saved, map_location=device)
 
     # Configuration parameters
@@ -17,15 +25,13 @@ if __name__ == "__main__":
         "hid_size": 768,              # Hidden state size
     }
 
-    print("TAKE DATASET")
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    path_dataset = directory.parent
     # Load test data
-    test_raw = load_data(os.path.join(current_dir, "dataset/laptop14_test.txt"))
+    test_raw = load_data(os.path.join(path_dataset, "dataset/laptop14_test.txt"))
     
     # Split the data into sub-sequences
     test_raw_split = split_data(test_raw)
-    
-    print("CREATE LANG")
+
     # Initialize the BERT tokenizer
     tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
     # Load lang
@@ -35,7 +41,6 @@ if __name__ == "__main__":
     # Create datasets for training, validation, and testing
     test_dataset = map_aspect(test_raw_split, lang, tokenizer)
 
-    print("CREATE DATALOADERS")
     # Create dataloaders for training, validation, and testing
     test_loader = DataLoader(test_dataset, batch_size=config["batch_test_size"], collate_fn=collate_fn)
 

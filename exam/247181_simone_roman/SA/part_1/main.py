@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 
 # Main function
 if __name__ == "__main__":
+    
     # Configuration parameters
     config = {
         "lr": 0.0001,                 # Learning rate

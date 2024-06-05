@@ -22,11 +22,15 @@ def create_dev(tmp_train_raw):
 def split_data(data):
     data_ret = []
     for elem in data:
+        # Split the sentence and aspects
         split_row = elem.split('####')
         tmp_sentence = []
         tmp_aspects = []
 
+        # Use only the right part of the split
         for element in split_row[1].split(" "):
+
+            # Split the element into word and aspect
             split_element = element.rsplit('=', 1)
             tmp_sentence.append(split_element[0])
 
@@ -37,9 +41,11 @@ def split_data(data):
             else:
                 print("error")
         
+        # transofrm the lists into strings
         tmp_sentence = " ".join(tmp_sentence)
         tmp_aspects = " ".join(tmp_aspects)
 
+        # Append the sentence and aspects to the data
         tmp_elem = {"sentence": tmp_sentence, "aspect": tmp_aspects}
         data_ret.append(tmp_elem)
 
