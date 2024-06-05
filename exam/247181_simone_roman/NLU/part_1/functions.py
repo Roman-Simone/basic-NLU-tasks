@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 
 
+# Function to train the model
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
     loss_array = []
@@ -25,6 +26,7 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
     return loss_array
 
 
+# Function to evaluate the model
 def eval_loop(data, criterion_slots, criterion_intents, model, lang):
     model.eval()
     loss_array = []
@@ -79,6 +81,7 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang):
     return results, report_intent, loss_array
 
 
+# Function to initialize the weights of the model
 def init_weights(mat):
     for m in mat.modules():
         if type(m) in [nn.GRU, nn.LSTM, nn.RNN]:
@@ -100,6 +103,7 @@ def init_weights(mat):
                     m.bias.data.fill_(0.01)
 
 
+# Function to save the results
 def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model, lang):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))

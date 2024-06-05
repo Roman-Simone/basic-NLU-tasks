@@ -5,6 +5,7 @@ from conll import evaluate
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 
+# Function to train the model
 def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=5):
     model.train()
     loss_array = []
@@ -25,6 +26,8 @@ def train_loop(data, optimizer, criterion_slots, criterion_intents, model, clip=
 
     return loss_array
 
+
+# Function to evaluate the model
 def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
     model.eval()
     loss_array = []
@@ -87,10 +90,6 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
             ref_slots_no_pad.append(tmp_ref)
             hyp_slots_no_pad.append(tmp_hyp)
 
-
-          
-
-
     try:            
         results = evaluate(ref_slots_no_pad, hyp_slots_no_pad)
     except Exception as ex:
@@ -103,9 +102,11 @@ def eval_loop(data, criterion_slots, criterion_intents, model, lang, tokenizer):
         
     report_intent = classification_report(ref_intents, hyp_intents, 
                                           zero_division=False, output_dict=True)
+    
     return results, report_intent, loss_array
 
 
+# Function to initialize the weights of the model
 def init_weights(mat):
     for n, m in mat.named_modules():
         if type(m) in [nn.GRU, nn.LSTM, nn.RNN]:
@@ -121,6 +122,7 @@ def init_weights(mat):
                 elif 'bias' in name:
                     param.data.fill_(0)
         else:
+            # Initialize the weights of the linear layer
             if type(m) in [nn.Linear]:
                 if 'slot_out' in n or 'intent_out' in n:
                     torch.nn.init.uniform_(m.weight, -0.01, 0.01)
@@ -128,6 +130,7 @@ def init_weights(mat):
                         m.bias.data.fill_(0.01)
 
 
+# Function to save the results
 def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimizer, model, config, test_f1, test_acc, best_model, lang):
     # Create a folder
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -139,6 +142,7 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, optimiz
     folder_path = os.path.join(folder_path, title)
     os.makedirs(folder_path, exist_ok=True)
 
+    # Plot the loss function for the training and dev set
     plt.figure()
     plt.plot(sampled_epochs, losses_train, '-', label='Train')
     plt.plot(sampled_epochs, losses_dev, '-', label='Dev')

@@ -6,11 +6,13 @@ import copy
 import numpy as np
 from tqdm import tqdm
 import torch.optim as optim
-from torch.utils.data import DataLoader
 from transformers import BertTokenizer
+from torch.utils.data import DataLoader
+
 
 if __name__ == "__main__":
-    #Parameters
+    
+    # HYPERPARAMETERS
     config = {
         "lr": 5e-5,
         "batch_train_size": 32,
@@ -69,21 +71,24 @@ if __name__ == "__main__":
     sampled_epochs = []
     best_score = 0
     for x in tqdm(range(1, config["n_epochs"])):
+        # Train the model
         loss = train_loop(train_loader, optimizer, criterion_slots, 
                         criterion_intents, model, clip=config["clip"])
-        if x % 1 == 0: # We check the performance every n epochs
+        
+        if x % 1 == 0: # check the performance every n epochs
             sampled_epochs.append(x)
             losses_train.append(np.asarray(loss).mean())
-
+            # Evaluate the model
             results_dev, intent_res, loss_dev = eval_loop(dev_loader, criterion_slots, criterion_intents, model, lang, tokenizer)
             losses_dev.append(np.asarray(loss_dev).mean())
             
             f1 = results_dev['total']['f']
             intent_acc = intent_res["accuracy"]
             actual_score = (f1 + intent_acc) / 2
-            # For decreasing the patience you can also use the average between slot f1 and intent accuracy
+            # use the average of the f1 and the accuracy as score 
             if actual_score > best_score:
                 best_score = actual_score
+                # Save the best model
                 best_model = copy.deepcopy(model).to('cpu')
                 patience = 4
             else:
@@ -91,12 +96,13 @@ if __name__ == "__main__":
             if patience <= 0: # Early stopping with patience
                 break 
     
-
+    # Evaluate the best model
     best_model.to(device)
     results_test, intent_test, _ = eval_loop(test_loader, criterion_slots, criterion_intents, best_model, lang, tokenizer)    
     test_f1 = results_test['total']['f']
     test_acc = intent_test['accuracy']
-    
+
+    # Print the results
     print('Slot F1: ', test_f1)
     print('Intent Accuracy:', test_acc)
 

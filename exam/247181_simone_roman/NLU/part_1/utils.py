@@ -9,6 +9,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "mps")
 PAD_TOKEN = 0
 
 
+# Load data
 def load_data(path):
     '''
         input: path/to/data
@@ -20,6 +21,7 @@ def load_data(path):
     return dataset
 
 
+# Create the dev set
 def create_dev(tmp_train_raw):
     # First we get the 10% of the training set, then we compute the percentage of these examples 
     portion = 0.10
