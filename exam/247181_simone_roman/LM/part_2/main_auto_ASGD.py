@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 # Main function
 if __name__ == "__main__":
 
-    # IPERPARAMETERS
+    # HYPERPARAMETERS
     config = {
         "batch_size_train": 32,
         "batch_size_dev": 128,

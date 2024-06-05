@@ -1,16 +1,27 @@
+import sys
+import pathlib
+from torch.utils.data import DataLoader
+
+# directory reach
+directory = pathlib.Path(__file__).parent.resolve()
+sys.path.append(str(directory.parent))
+
 from utils import *
 from model import *
-from functions import *
-
-from torch.utils.data import DataLoader
+from functions import *  # Import everything from functions.py file
 
 
 if __name__ == "__main__":
-    # write path of the model
-    path_model_saved = "/Users/simoneroman/Desktop/NLU/NLU/exam/247181_simone_roman/NLU/part_1/results/PART_13_test_3_f1_94.14_acc_95.41/model.pt"
+
+    # NAME OF THE MODEL to load
+    # name_model = "model_11.pt" -> no modifications
+    # name_model = "model_12.pt" -> bidirectional
+    # name_model = "model_13.pt" -> bidirectional + dropout
+    name_model = "model_13.pt"
+    path_model_saved = f"{directory.parent}/bin/{name_model}"
     loaded_object = torch.load(path_model_saved, map_location=device)
     
-    # PARAMETERS
+    # HYPERPARAMETERS
     # For model_11.pt  setting --> "flag_bidirectional": False, "flag_dropout": False
     # For model_12.pt  setting --> "flag_bidirectional": True, "flag_dropout": False
     # For model_13.pt  setting --> "flag_bidirectional": True, "flag_dropout": True 
@@ -25,8 +36,8 @@ if __name__ == "__main__":
     }
 
     # Load the data
-    current_dir = os.path.dirname(os.path.abspath(__file__)) 
-    test_raw = load_data(os.path.join(current_dir, "dataset/ATIS/test.json"))
+    path_dataset = directory.parent
+    test_raw = load_data(os.path.join(path_dataset, "dataset/ATIS/test.json"))
 
     # Load lang
     lang = Lang([], [], [], cutoff=0)
