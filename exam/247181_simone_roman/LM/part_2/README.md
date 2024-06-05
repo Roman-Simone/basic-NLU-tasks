@@ -5,7 +5,7 @@
 
 ### 1. `main_manual_avsgd.py`
 
-This script implements the language model with manual Average Stochastic Gradient Descent (AvSGD). The manual version calculates the moving average of the model weights during training and mantain SGD optimizer.
+This script implements the language model with manual Average Stochastic Gradient Descent. The manual version calculates the moving average of the model weights during training and mantain SGD optimizer.
 
 ### 2. `main_automatic_avsgd.py`
 
