@@ -12,7 +12,8 @@ from torch.utils.data import DataLoader
 
 # Main function
 if __name__ == "__main__":
-    #PARAMETERS
+
+    # IPERPARAMETERS
     config = {
         "batch_size_train": 32,
         "batch_size_dev": 128,
@@ -78,28 +79,30 @@ if __name__ == "__main__":
         #if switched in ASGD
         if 't0' in optimizer.param_groups[0]:
 
+            # Save the current weights and load the averaged ones
             tmp = {}
             for prm in model.parameters():
                 tmp[prm] = prm.data.clone()
                 prm.data = optimizer.state[prm]['ax'].clone()
                 
-
+            # Evaluate the model with the averaged weights
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
             pbar.set_description(f"lr= {config['lr']} ASGD= {'t0' in optimizer.param_groups[0]} PPL: {ppl_dev}")       
 
+            # Restore the current weights
             for prm in model.parameters():
                 prm.data = tmp[prm].clone()
 
         else:
-
-
+            # Evaluate the model with the current weights
             ppl_dev, loss_dev = eval_loop(dev_loader, criterion_eval, model)
             ppl_dev_list.append(ppl_dev)
             losses_dev.append(np.asarray(loss_dev).mean())
             pbar.set_description(f"lr= {config['lr']} ASGD= {'t0' in optimizer.param_groups[0]} PPL: {ppl_dev}")
 
+            # Check if its time to switch to ASGD
             if len(ppl_dev_list) > window and ppl_dev > min(ppl_dev_list[:-window]):
                 config["lr"] *= 4/10
                 optimizer.param_groups[0]['lr'] = config["lr"]
@@ -107,30 +110,31 @@ if __name__ == "__main__":
                 optimizer = torch.optim.ASGD(best_weights, lr=config["lr"], t0=0, lambd=0., weight_decay=1.2e-06)
             
 
-
-        # best_weights = model.parameters()
-
         if  ppl_dev < best_ppl: # the lower, the better
             best_ppl = ppl_dev
             best_model = copy.deepcopy(model).to('cpu')
-            best_weights = model.parameters()
+            best_weights = model.parameters() # Save the best weights
             patience = 3
+
         elif ppl_dev > best_ppl and 't0' not in optimizer.param_groups[0]:
-            config["lr"] *= 4/10
-            optimizer.param_groups[0]['lr'] = config["lr"]
+            config["lr"] *= 4/10    # Reduce the learning rate
+            optimizer.param_groups[0]['lr'] = config["lr"] # Update the optimizer
+
         elif ppl_dev > best_ppl and 't0' in optimizer.param_groups[0]:
-            config["lr"] *= 4/10
-            optimizer.param_groups[0]['lr'] = config["lr"]
-            patience -= 1
+            config["lr"] *= 4/10 # Reduce the learning rate
+            optimizer.param_groups[0]['lr'] = config["lr"] # Update the optimizer
+            patience -= 1 # Decrease the patience
 
         if patience <= 0: # Early stopping with patience
-            break # Not nice but it keeps the code clean
+            break 
 
-
+    # TESTING
     best_model.to(DEVICE)
     final_ppl,  _ = eval_loop(test_loader, criterion_eval, best_model)
     print('Test ppl: ', final_ppl)
 
-    name_exercise = "PART_22_AUTO"
+
+    # SAVE RESULTS
+    name_exercise = "PART_23_AUTO"
     save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_train_list, ppl_dev_list, 
                 final_epoch, best_ppl, final_ppl, optimizer, model, best_model, config)

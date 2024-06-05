@@ -5,7 +5,7 @@ Embedding Size: 500
 Learning Rate: 0.0006553600000000003
 Clip: 5
 Vocabulary Length: 10001
-Number of Epochs: 75
+Number of Epochs: 69
 Best Dev PPL: 92.88362365768285
 Best Test PPL: 90.31665420508345
 Batch Size Train: 32

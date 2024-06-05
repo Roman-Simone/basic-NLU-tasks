@@ -12,7 +12,8 @@ from torch.utils.data import DataLoader
 
 # Main function
 if __name__ == "__main__":
-    # PARAMETERS
+    
+    # IPERPARAMETERS
     config = {
         "batch_size_train": 32,
         "batch_size_dev": 128,
@@ -99,6 +100,7 @@ if __name__ == "__main__":
             if patience <= 0:
                 break  # Early stopping
 
+    # Test
     best_model.to(DEVICE)
     final_ppl, _ = eval_loop(test_loader, criterion_eval, best_model)
     print('Test ppl: ', final_ppl)

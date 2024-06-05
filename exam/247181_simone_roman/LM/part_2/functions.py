@@ -109,7 +109,7 @@ def save_result(name_exercise, sampled_epochs, losses_train, losses_dev, ppl_tra
     torch.save(best_model.state_dict(), os.path.join(folder_path, "model.pt"))
 
 
-# for manual ASGD it is necessary to save the optimizer state
+# for manual ASGD it is necessary to compute the average of the weights
 def average_weights(list_weights, model):
     avg_weights = {}
 
