@@ -34,6 +34,9 @@ basic_nlu_tasks
 ├── LM
 │   ├── part_1
 │   │   ├── dataset
+│   │   ├── extra
+│   │   │   ├── details_models
+│   │   │   ├── test_model.py
 │   │   ├── functions.py
 │   │   ├── main.py
 │   │   ├── model.py
