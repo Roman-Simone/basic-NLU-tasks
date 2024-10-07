@@ -11,7 +11,7 @@
 - [Project Structure](#project-structure)
 - [Installation](#installation)
 - [Running the Project](#running-the-project)
-- [Contacts](#contacts)
+- [Contact](#contact)
 
 ## Project Overview
 This project introduces the main tasks in the field of Natural Language Understanding (NLU). The following tasks are covered:
@@ -28,81 +28,54 @@ This project introduces the main tasks in the field of Natural Language Understa
 
 Each folder contains a detailed report outlining the corresponding tasks.
 
-## Project Structure
-
-```plaintext
-ASAP/
-├── belief/
-│   ├── agentData.js           # Manages information related to the agent(s)
-│   ├── belief.js              # Handles general belief management
-│   ├── map.js                 # Stores map-related data
-│   ├── utilsBelief.js         # Utility functions for belief management
-|
-├── coordination/
-│   ├── coordination.js        # Manages inter-agent communication 
-|
-├── intention&revision/
-│   ├── agent.js               # Manages agent loop and intentions
-│   ├── intention.js           # Handles intention execution
-│   ├── options.js             # Manages options loop to select the best action
-│   ├── utilsOptions.js        # Utility functions for selecting options and calculating utilities
-|
-├── planner/
-│   ├── domain.pddl/           # PDDL domain definition
-│   ├── plans.js               # Contains all possible plans
-│   ├── utils_planner.js       # Utility functions for planning (e.g., BFS)
-|
-├── config.js                  # Configuration parameters
-├── index.js                   # Entry point for running the agent
-└── socketConnection.js        # Manages the client socket connection
-Report_ASA.pdf                 # report of the project
+## Project structure
 ```
+basic_nlu_tasks
+├── LM
+│   ├── part_1
+│   │   ├── dataset
+│   │   ├── functions.py
+│   │   ├── main.py
+│   │   ├── model.py
+│   │   ├── README.md
+│   │   └── utils.py
+│   └── part_2
+├── NLU
+│   ├── part_1
+│   └── part_2
+├── nlu_env.yaml
+├── README.md
+├── requirements.txt
+└── SA
+    └── part_1
+```
+- LM: Language models
+- NLU: Slot filling and intent recognition
+- SA: Aspect extraction for Sentiment Analyisis
 
 ## Installation
 
-1. **Clone the repository:**
-   ```
-   git clone https://github.com/Roman-Simone/ASA_Project.git
-   ```
+In order to run the project you'll need to clone it and install the requirements. We suggest you to create a virtual environment 
+- Clone it
 
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
+    ```BASH
+    git clone https://github.com/Roman-Simone/basic_nlu_tasks
 
-3. **Set up Docker environment for PDDL:**
-   
-   If you want to solve PDDL problems locally, follow the instructions in the [Planutils Server Environment](https://github.com/AI-Planning/planutils/tree/main/environments/server) to set up the Docker environment required for the PDDL planners (otherwise don't do anything).
-
-   Then, update the parameters in node_modules/@unitn-asa/pddl-client/src/PddlOnlineSolver.js to:
-    
-    ```bash
-    const HOST = "http://localhost:5001"
-    const PATH = "/package/dual-bfws-ffparser/solve"
     ```
-
-## Running the Project
-
-The program supports two modes:
-
-1. Single Agent Mode: Run a single agent in the game.
+- Create the env, in this case with conda but venv could be also used:
 
     ```bash
-    node index.js ONE agent_1
-    ```
-2. Multi-Agent Mode: Run two agents (one MASTER and one SLAVE) in the game.
+    conda env create -f nlu_env.yaml -n nlu24
+    conda activate nlu24
+    ``` 
 
-    ```bash
-    node index.js TWO agent_1
-    node index.js TWO agent_2
-    ```
+## Running the project
+In order to run the examples enter in the folder of the task and run the `main.py` file
 
-# Contacts
+# Contact
 For any inquiries, feel free to contact:
 
 - Simone Roman - [simone.roman@studenti.unitn.it](mailto:simone.roman@studenti.unitn.it)
-
-- Stefano Bonetto - [stefano.bonetto@studenti.unitn.it](mailto:stefano.bonetto@studenti.unitn.it)
 
 <br>
 
