@@ -14,11 +14,19 @@
 - [Contacts](#contacts)
 
 ## Project Overview
-This project is part of the "Autonomous Software Agents" master course. The objective is to develop an autonomous agent based on the Belief-Desire-Intention (BDI) architecture. The agent is designed to play a game where it must pick up and deliver parcels. Interaction with the game environment is facilitated through the API provided by the [Deliveroo.js](https://github.com/unitn-ASA/DeliverooAgent.js) project.
+This project introduces the main tasks in the field of Natural Language Understanding (NLU). The following tasks are covered:
 
-<p align="center">
-  <img src="img_README/deliveroo.png" alt="Deliveroo Agent" style="display: block; margin: 0 auto; width: 500px;">
-</p>
+1. **Building a Neural Language Model (LM)**:
+   - Using **LSTM** with regularization techniques to improve performance.
+   
+2. **Intent Classification and Slot Filling**:
+   - First with LSTM,
+   - Then using **BERT** for enhanced results.
+
+3. **Aspect-Based Sentiment Analysis (ABSA)**:
+   - Focused on term extraction using BERT.
+
+Each folder contains a detailed report outlining the corresponding tasks.
 
 ## Project Structure
 
